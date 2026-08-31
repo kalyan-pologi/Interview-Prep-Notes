@@ -300,6 +300,23 @@
 <h3>@EntityGraph</h3>
 <p>Controls the entity fetching strategy to avoid N+1 problems. Use case: performance optimization, lazy loading control, query optimization.</p>
 
+<h3>N+1 Query Problem</h3>
+<p>Happens when fetching a list of parent entities lazily loads each one's related child collection with a
+  separate query, one query for the parent list plus N more queries, one per parent, instead of a single join.
+  It is easy to miss locally with a handful of test rows and only shows up as real latency once the dataset
+  grows. Fixed with <code>@EntityGraph</code>, a <code>JOIN FETCH</code> in a custom <code>@Query</code>, or
+  batch fetching (<code>@BatchSize</code>/<code>hibernate.default_batch_fetch_size</code>). Worth tracing with
+  a SQL logging tool or a request-level query counter, since it will not show up as a single slow query, it
+  shows up as an endpoint issuing dozens of small fast ones.</p>
+
+<h3>DataIntegrityViolationException</h3>
+<p>Thrown when a write violates a database-level constraint, a unique index, a foreign key, a not-null column.
+  Rather than treating it purely as an error to log and fail on, it can be used as an expected signal for
+  race-safe upserts: fire the insert, catch this exception on a unique-constraint collision, then read back the
+  row the other concurrent writer already inserted. This avoids distributed locking for a class of races where
+  two requests can both pass a cache-miss check before either has written, since the database's own constraint
+  becomes the single source of truth for who won the race.</p>
+
 <h3>@CreatedDate/@LastModifiedDate</h3>
 <p>Automatic auditing of creation/modification times. Use case: data auditing, change tracking, timestamp management.</p>
 
@@ -308,6 +325,26 @@
 
 <h3>@Version</h3>
 <p>Optimistic locking support for concurrent updates. Use case: concurrency control, data consistency, conflict resolution.</p>
+
+<h3>OptimisticLockException</h3>
+<p>Thrown when a <code>@Version</code>-annotated entity is saved but its version number no longer matches the
+  row in the database, meaning another transaction updated it in between the read and the write. Unlike
+  pessimistic locking (<code>SELECT ... FOR UPDATE</code>), which blocks concurrent readers, optimistic locking
+  lets both transactions proceed and only fails the losing write at commit time, which scales better for
+  read-heavy workloads where actual write conflicts are rare. The typical handling pattern is catching this
+  exception and retrying the read-modify-write cycle from scratch, often paired with Spring Retry's
+  <code>@Retryable</code>.</p>
+
+<h3>Flyway</h3>
+<p>Version-controlled, numbered SQL migration files applied automatically at application startup, so schema
+  changes are tracked in source control and reproducible across dev, UAT, and prod rather than applied by hand
+  against each environment. Each migration is idempotent (guarded with <code>IF NOT EXISTS</code> checks where
+  relevant) so rerunning is safe, and a tracking table records which migrations have already been applied.
+  A migration that only gets tested against databases that already have the target schema can pass everywhere
+  it's tried and still fail the moment it runs against a genuinely fresh, empty database, since it implicitly
+  assumed the schema already existed. The fix is a baseline migration that explicitly creates the schema first,
+  ordered ahead of everything else purely by its own version number, so correctness does not depend on anyone
+  remembering to run a manual setup step first.</p>
 
 <h2>Spring Cache</h2>
 
@@ -423,6 +460,20 @@
 <h3>WebClient</h3>
 <p>Non-blocking HTTP client replacing RestTemplate. Use case: reactive HTTP calls, non-blocking communication, high performance.</p>
 
+<h3>Mono.zip</h3>
+<p>Combines multiple independent <code>Mono</code> sources and waits for all of them to complete before
+  emitting a single combined result. Useful when several async calls all need to succeed together, if any one
+  of them errors, the whole combined <code>Mono</code> errors and none of the individual results are used.
+  Good fit for calls that are only meaningful as a group, for example fetching several required fields that
+  together make up one report section.</p>
+
+<h3>onErrorResume</h3>
+<p>Catches an error on a reactive stream and substitutes a fallback publisher instead of letting the error
+  propagate and terminate the stream. On a <code>Flux</code> of independent optional calls, wrapping each one
+  with <code>onErrorResume</code> means one failing call degrades to a fallback or empty value instead of
+  aborting the entire pipeline, which matters when a report or response should still succeed with partial data
+  rather than failing outright because one non-critical enrichment call timed out.</p>
+
 <h2>Async, Scheduling &amp; Events</h2>
 
 <h3>@Async</h3>
@@ -471,6 +522,22 @@
   <img src="assets/img/spring-transactional-when-it-will-not-work-table.png" alt="Table listing common cases where @Transactional silently does not work, such as self-invocation and private methods">
   <figcaption>Cases where @Transactional will not work</figcaption>
 </figure>
+
+<h2>Testing</h2>
+
+<h3>Testcontainers</h3>
+<p>Spins up a real database (or other dependency) in a Docker container for integration tests, instead of
+  relying on an in-memory substitute like H2 that may not actually match the target database's behavior on
+  things like unique constraint upserts or cascading deletes. Declare the container as a <code>static</code>
+  field annotated <code>@Container</code> so it is shared across every test method in the class and only
+  started once, rather than once per test.</p>
+
+<h3>@DynamicPropertySource</h3>
+<p>Injects a container's connection details (host, port, credentials) into the Spring datasource
+  configuration before the application context starts, which is what lets Testcontainers work with Spring's
+  own dependency injection: it runs early enough to override datasource properties before any bean attempts to
+  connect, so the context boots directly against the containerized database rather than a hardcoded
+  connection string.</p>
 
 <h2>Observability</h2>
 
