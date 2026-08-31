@@ -1,0 +1,106 @@
+<div class="section-header">
+  <div class="tag">DevOps</div>
+  <h1>🐳 Docker</h1>
+  <p>Docker concepts and commands.</p>
+</div>
+
+<div class="note-body">
+  <h2>Basic info</h2>
+  <pre><code>docker version                     # Show Docker client & server version
+docker info                        # Show system-wide Docker info
+docker --help                      # Show help for Docker commands</code></pre>
+
+  <h2>Image management</h2>
+  <pre><code>docker images                      # List all downloaded images
+docker pull &lt;image&gt;:&lt;tag&gt;          # Pull image from Docker Hub
+docker rmi &lt;image_id&gt;              # Remove an image by ID
+docker rmi $(docker images -q)     # Remove ALL images (use carefully)
+docker build -t &lt;name&gt;:&lt;tag&gt; .     # Build an image from Dockerfile in current directory
+docker tag &lt;image&gt; &lt;repo&gt;:&lt;tag&gt;    # Tag an image for pushing
+docker push &lt;repo&gt;:&lt;tag&gt;           # Push tagged image to registry</code></pre>
+
+  <h2>Container management</h2>
+  <pre><code>docker ps                          # List all running containers
+docker ps -a                       # List ALL containers (including stopped)
+docker run &lt;image&gt;                 # Run a container from an image
+docker run -d &lt;image&gt;              # Run in detached mode (background)
+docker run -it &lt;image&gt; /bin/bash   # Run interactively with terminal shell
+docker start &lt;container_id&gt;        # Start a stopped container
+docker stop &lt;container_id&gt;         # Stop a running container
+docker restart &lt;container_id&gt;      # Restart container
+docker rm &lt;container_id&gt;           # Remove stopped container
+docker rm -f &lt;container_id&gt;        # Force remove running container
+docker rm $(docker ps -aq)         # Remove ALL containers (use carefully)
+docker rename &lt;old&gt; &lt;new&gt;          # Rename container</code></pre>
+
+  <h2>Logs, inspect, execute</h2>
+  <pre><code>docker logs &lt;container_id&gt;         # Show logs for a container
+docker logs -f &lt;container_id&gt;      # Follow live logs (Ctrl+C to stop)
+docker exec -it &lt;container_id&gt; bash # Open a shell inside running container
+docker inspect &lt;container_id&gt;      # Show detailed JSON info about a container
+docker top &lt;container_id&gt;          # Show running processes in container
+docker stats                       # Live view of CPU, memory, network usage</code></pre>
+
+  <h2>Volumes & networks</h2>
+  <pre><code>docker volume ls                   # List all volumes
+docker volume create &lt;vol_name&gt;    # Create a named volume
+docker volume rm &lt;vol_name&gt;        # Remove a volume
+docker network ls                  # List all networks
+docker network inspect &lt;net_name&gt;  # Show network details
+docker network create &lt;net_name&gt;   # Create a custom bridge network
+docker network rm &lt;net_name&gt;       # Remove a network
+docker network connect &lt;net&gt; &lt;ctr&gt; # Connect container to a network
+docker network disconnect &lt;net&gt; &lt;ctr&gt; # Disconnect container from network</code></pre>
+
+  <h2>Cleanup</h2>
+  <pre><code>docker system prune                # Remove unused containers, networks, and dangling images
+docker system prune -a             # Remove ALL unused images (be cautious)
+docker volume prune                # Remove unused volumes
+docker network prune               # Remove unused networks
+docker builder prune               # Clean build cache</code></pre>
+
+  <h2>Ports & mounts (run flags)</h2>
+  <pre><code>docker run -p 8080:8080 &lt;image&gt;         # Map host port 8080 to container port 8080
+docker run -v D:\data:/app/data &lt;image&gt; # Mount local folder into container
+docker run --name &lt;ctr_name&gt; &lt;image&gt;    # Assign a name to container
+docker run --env KEY=value &lt;image&gt;      # Pass environment variables</code></pre>
+
+  <h2>Docker Compose</h2>
+  <pre><code>docker-compose up                  # Start all services (foreground)
+docker-compose up -d               # Start in detached (background) mode
+docker-compose down                # Stop and remove all services, networks, volumes
+docker-compose build               # Build/rebuild images from Dockerfiles
+docker-compose restart             # Restart all containers
+docker-compose ps                  # Show running services
+docker-compose logs -f             # Tail logs from all services
+docker-compose exec &lt;svc&gt; bash     # Exec into a service container
+docker-compose stop &lt;svc&gt;          # Stop a specific service
+docker-compose rm &lt;svc&gt;            # Remove stopped service container
+docker-compose config              # Validate docker-compose.yml
+docker-compose pull                # Pull latest images for services</code></pre>
+
+  <h2>Container file system & copy</h2>
+  <pre><code>docker cp &lt;ctr_id&gt;:/path/in/container /host/path  # Copy from container to host
+docker cp /host/path &lt;ctr_id&gt;:/path/in/container  # Copy from host to container
+docker export &lt;ctr_id&gt; &gt; container.tar            # Export container filesystem
+docker import container.tar &lt;image_name&gt;          # Create image from exported tar</code></pre>
+
+  <h2>Troubleshooting</h2>
+  <pre><code>docker inspect &lt;container_id&gt; | more  # Inspect config/details
+docker events                        # Monitor real-time Docker events
+docker logs -f &lt;container_id&gt;        # Stream container logs
+docker ps --filter "status=exited"   # Find stopped containers
+docker-compose up --build --remove-orphans # Clean rebuild</code></pre>
+
+  <h2>Daily dev workflow</h2>
+  <pre><code># 1. Build all services
+docker-compose build
+# 2. Start all services (detached)
+docker-compose up -d
+# 3. View live logs
+docker-compose logs -f
+# 4. Stop all services
+docker-compose down
+# 5. Remove everything (full reset)
+docker system prune -a --volumes</code></pre>
+</div>

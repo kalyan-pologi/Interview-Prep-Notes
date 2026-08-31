@@ -1,0 +1,262 @@
+<div class="section-header">
+  <div class="tag">Frontend</div>
+  <h1>🔷 TypeScript</h1>
+  <p>TypeScript reference.</p>
+</div>
+
+<div class="note-body">
+  <h2>Basic Types</h2>
+  <pre><code>let name: string = "John";
+let age: number = 25;
+let isActive: boolean = true;
+let data: any = "anything";          // avoid
+let value: unknown = "safer";        // type-safe any
+let nothing: void = undefined;       // no return
+let never: never;                    // never returns</code></pre>
+
+  <h2>Arrays & Tuples</h2>
+  <pre><code>let numbers: number[] = [1, 2, 3];
+let names: Array&lt;string&gt; = ["John"];
+let tuple: [string, number] = ["John", 25];  // fixed types
+let readonlyArr: readonly number[] = [1, 2];</code></pre>
+
+  <h2>Objects & Interfaces</h2>
+  <pre><code>interface User {
+  id: number;
+  name: string;
+  email?: string;         // optional
+  readonly created: Date; // read-only
+}
+
+const user: User = { id: 1, name: "John", created: new Date() };</code></pre>
+
+  <h2>Type Aliases</h2>
+  <pre><code>type ID = string | number;
+type Status = "active" | "inactive";
+type UserShape = {
+  id: ID;
+  status: Status;
+};</code></pre>
+
+  <h2>Enums</h2>
+  <pre><code>enum Role { Admin, User, Guest }  // 0, 1, 2
+enum Status {
+  Pending = "PENDING",
+  Approved = "APPROVED",
+}
+let role: Role = Role.Admin;</code></pre>
+
+  <h2>Union & Intersection</h2>
+  <pre><code>// Union (OR)
+type StringOrNumber = string | number;
+let id: StringOrNumber = 123;
+
+// Intersection (AND)
+type Employee = Person & Worker;</code></pre>
+
+  <h2>Type Assertions</h2>
+  <pre><code>let value: any = "hello";
+let length: number = (value as string).length;
+let length2: number = (&lt;string&gt;value).length;</code></pre>
+
+  <h2>Functions</h2>
+  <pre><code>function add(a: number, b: number): number {
+  return a + b;
+}
+
+const multiply = (a: number, b: number): number => a * b;
+
+// optional & default parameters
+function greet(name: string, age?: number): string {
+  return `Hello ${name}`;
+}
+function log(msg: string = "default"): void {
+  console.log(msg);
+}
+
+// rest parameters
+function sum(...numbers: number[]): number {
+  return numbers.reduce((a, b) => a + b, 0);
+}</code></pre>
+
+  <h2>Generics</h2>
+  <pre><code>function identity&lt;T&gt;(value: T): T {
+  return value;
+}
+let result = identity&lt;string&gt;("hello");
+
+interface Box&lt;T&gt; {
+  value: T;
+}
+let box: Box&lt;number&gt; = { value: 123 };
+
+class DataHolder&lt;T&gt; {
+  private data: T;
+  constructor(data: T) { this.data = data; }
+  getData(): T { return this.data; }
+}</code></pre>
+
+  <h2>Classes</h2>
+  <pre><code>class User {
+  private id: number;
+  public name: string;
+  protected email: string;
+  readonly created: Date;
+
+  constructor(id: number, name: string) {
+    this.id = id;
+    this.name = name;
+    this.created = new Date();
+  }
+
+  getName(): string { return this.name; }
+}
+
+class Admin extends User {
+  role: string = "admin";
+}
+
+abstract class Animal {
+  abstract makeSound(): void;
+  move(): void { console.log("Moving..."); }
+}</code></pre>
+
+  <h2>Utility Types</h2>
+  <pre><code>interface User {
+  id: number;
+  name: string;
+  email: string;
+}
+
+type PartialUser = Partial&lt;User&gt;;         // all optional
+type RequiredUser = Required&lt;User&gt;;       // all required
+type ReadonlyUser = Readonly&lt;User&gt;;       // all readonly
+type UserPreview = Pick&lt;User, "id" | "name"&gt;;   // select properties
+type UserWithoutEmail = Omit&lt;User, "email"&gt;;    // exclude properties
+type Roles = Record&lt;string, boolean&gt;;     // { [key: string]: boolean }
+type Result = ReturnType&lt;typeof someFunction&gt;;  // extract return type</code></pre>
+
+  <h2>Type Guards</h2>
+  <pre><code>function print(value: string | number) {
+  if (typeof value === "string") {
+    console.log(value.toUpperCase());
+  } else {
+    console.log(value.toFixed(2));
+  }
+}
+
+if (error instanceof Error) {
+  console.log(error.message);
+}
+
+function isString(value: any): value is string {
+  return typeof value === "string";
+}
+
+if ("email" in user) {
+  console.log(user.email);
+}</code></pre>
+
+  <h2>Promises & Async</h2>
+  <pre><code>function fetchData(): Promise&lt;string&gt; {
+  return Promise.resolve("data");
+}
+
+async function getData(): Promise&lt;User&gt; {
+  const response = await fetch("/api/user");
+  const data: User = await response.json();
+  return data;
+}
+
+async function loadData&lt;T&gt;(url: string): Promise&lt;T&gt; {
+  const response = await fetch(url);
+  return await response.json();
+}</code></pre>
+
+  <h2>React with TypeScript</h2>
+  <pre><code>interface Props {
+  name: string;
+  age: number;
+  onClick?: () => void;
+}
+
+const UserCard: React.FC&lt;Props&gt; = ({ name, age, onClick }) => {
+  return &lt;div onClick={onClick}&gt;{name}, {age}&lt;/div&gt;;
+};
+
+const [count, setCount] = useState&lt;number&gt;(0);
+const [user, setUser] = useState&lt;User | null&gt;(null);
+const inputRef = useRef&lt;HTMLInputElement&gt;(null);
+
+const handleClick = (e: React.MouseEvent&lt;HTMLButtonElement&gt;) => {
+  console.log(e.currentTarget);
+};
+const handleChange = (e: React.ChangeEvent&lt;HTMLInputElement&gt;) => {
+  console.log(e.target.value);
+};</code></pre>
+
+  <h2>Advanced Types</h2>
+  <pre><code>// conditional types
+type IsString&lt;T&gt; = T extends string ? true : false;
+
+// mapped types
+type Optional&lt;T&gt; = { [K in keyof T]?: T[K] };
+
+// template literal types
+type EventName = "click" | "hover";
+type EventHandlerName = `on${Capitalize&lt;EventName&gt;}`; // "onClick" | "onHover"
+
+// keyof operator
+type UserKeys = keyof User;  // "id" | "name" | "email"
+
+// typeof operator
+const sample = { name: "John", age: 25 };
+type SampleType = typeof sample;</code></pre>
+
+  <h2>Quick Commands</h2>
+  <pre><code># Install TypeScript
+npm install -g typescript
+# Initialize tsconfig.json
+tsc --init
+# Compile
+tsc index.ts
+# Watch mode
+tsc --watch
+# Compile all files
+tsc
+# Run with ts-node
+npx ts-node index.ts</code></pre>
+
+  <pre><code>// common tsconfig.json
+{
+  "compilerOptions": {
+    "target": "ES6",
+    "module": "commonjs",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "outDir": "./dist",
+    "rootDir": "./src"
+  }
+}</code></pre>
+
+  <h2>Key Concepts</h2>
+  <ul>
+    <li><b>Type Safety</b>, catches errors at compile time instead of at runtime</li>
+    <li><b>Inference</b>, TypeScript automatically infers types when they are not explicitly
+      annotated</li>
+    <li><b>Strict Mode</b>, enabled with <code>"strict": true</code>, catches null/undefined
+      access and other unsafe patterns</li>
+    <li><b>Non-null assertion</b>, <code>user!.name</code> tells the compiler a value is not null
+      even though its type says it could be, use sparingly since it disables a real safety check</li>
+    <li><b>Type vs Interface</b>, prefer <code>interface</code> for object shapes since it
+      supports declaration merging, prefer <code>type</code> for unions and other complex type
+      compositions</li>
+  </ul>
+
+  <figure class="note-figure">
+    <img src="assets/img/typescript-key-features-table.png" alt="TypeScript key features table">
+    <figcaption>TypeScript key features</figcaption>
+  </figure>
+</div>

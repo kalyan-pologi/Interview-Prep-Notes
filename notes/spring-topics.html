@@ -1,0 +1,542 @@
+<div class="section-header">
+  <div class="tag">Spring</div>
+  <h1>🍃 Spring Framework Topics</h1>
+  <p>Definitions and use cases for Spring Framework concepts: core IoC/DI, Spring Boot, AOP, MVC/REST, Security, Data JPA, caching, integration/batch/cloud, WebFlux, scheduling/events, and transactions.</p>
+</div>
+<div class="note-body">
+
+<h2>Core / IoC / DI</h2>
+
+<h3>Spring Framework</h3>
+<p>Comprehensive framework for enterprise Java applications providing IoC, AOP, and integration capabilities. Use case: enterprise applications, dependency management, modular development.</p>
+
+<h3>Inversion of Control (IoC)</h3>
+<p>Design principle where object creation and wiring is handled by the Spring container. Use case: loose coupling, testability, configuration management.</p>
+
+<h3>Dependency Injection (DI)</h3>
+<p>IoC implementation where dependencies are injected into objects rather than created internally. Use case: testable code, modular design, configuration flexibility.</p>
+
+<h3>ApplicationContext</h3>
+<p>Advanced IoC container providing enterprise features like AOP, internationalization, event handling. Use case: enterprise applications, resource management, bean lifecycle.</p>
+
+<h3>BeanFactory</h3>
+<p>Basic IoC container for simple dependency injection. Use case: lightweight applications, memory-constrained environments, basic DI needs.</p>
+
+<h3>Bean Lifecycle</h3>
+<p>Managed object lifecycle: instantiation, dependency injection, initialization, destruction. Use case: resource management, cleanup operations, initialization logic.</p>
+
+<h3>Bean Scopes</h3>
+<p>Defines bean instance creation strategy: singleton, prototype, request, session, application. Use case: state management, performance optimization, web applications.</p>
+
+<h3>@Component</h3>
+<p>Marks a class as a Spring-managed bean for component scanning. Use case: auto-detection, service layer classes, general-purpose beans.</p>
+
+<h3>@Service</h3>
+<p>Specialization of @Component for service layer classes. Use case: business logic layer, service classes, semantic clarity.</p>
+
+<h3>@Repository</h3>
+<p>Specialization of @Component for the data access layer with exception translation. Use case: DAO classes, database operations, exception handling.</p>
+
+<h3>@Controller</h3>
+<p>Specialization of @Component for web layer request handlers. Use case: MVC controllers, request mapping, web applications.</p>
+
+<h3>@Configuration</h3>
+<p>Marks a class as configuration containing @Bean methods. Use case: Java-based configuration, bean definitions, application setup.</p>
+
+<h3>@Bean</h3>
+<p>Method-level annotation creating Spring-managed beans. Use case: third-party object integration, custom bean creation, configuration methods.</p>
+
+<h3>@Autowired</h3>
+<p>Automatic dependency injection by type. Use case: constructor, field, setter injection, reducing boilerplate code.</p>
+
+<h3>@Qualifier</h3>
+<p>Resolves ambiguity when multiple beans of the same type exist. Use case: bean selection, dependency disambiguation, specific bean injection.</p>
+
+<h3>@Primary</h3>
+<p>Gives precedence when multiple beans of the same type exist. Use case: default bean selection, preference indication, autowiring conflicts.</p>
+
+<h3>@Value</h3>
+<p>Injects values from properties files or expressions. Use case: configuration values, property injection, externalized configuration.</p>
+
+<h3>@ConfigurationProperties</h3>
+<p>Maps properties to POJO fields for type-safe configuration. Use case: hierarchical properties, configuration validation, type safety.</p>
+
+<h3>@Profile</h3>
+<p>Conditional bean creation based on active profiles. Use case: environment-specific beans, deployment flexibility, configuration switching.</p>
+
+<h3>@Conditional</h3>
+<p>Creates beans based on custom conditions. Use case: complex conditional logic, feature toggles, environment-based configuration.</p>
+
+<h3>@PostConstruct</h3>
+<p>Method executed after dependency injection completion. Use case: bean initialization, resource setup, post-injection logic.</p>
+
+<h3>@PreDestroy</h3>
+<p>Method executed before bean destruction. Use case: resource cleanup, connection closing, graceful shutdown.</p>
+
+<h3>@PropertySource</h3>
+<p>Specifies property files for configuration. Use case: external configuration, environment-specific properties, configuration management.</p>
+
+<h3>@Import</h3>
+<p>Imports additional configuration classes. Use case: configuration composition, modular configuration, configuration reuse.</p>
+
+<h3>BeanPostProcessor</h3>
+<p>Processes beans before/after initialization. Use case: bean modification, proxy creation, custom initialization logic.</p>
+
+<h3>BeanFactoryPostProcessor</h3>
+<p>Modifies bean definitions before instantiation. Use case: configuration modification, bean definition customization, framework integration.</p>
+
+<h2>Spring Boot</h2>
+
+<h3>Spring Boot</h3>
+<p>Opinionated framework providing auto-configuration and embedded servers. Use case: rapid development, microservices, standalone applications.</p>
+
+<h3>Auto-Configuration</h3>
+<p>Automatic bean configuration based on classpath dependencies. Use case: reducing boilerplate, convention over configuration, quick setup.</p>
+
+<h3>@SpringBootApplication</h3>
+<p>Combines @Configuration, @EnableAutoConfiguration, @ComponentScan. Use case: main application class, Spring Boot startup, component scanning.</p>
+
+<h3>@EnableAutoConfiguration</h3>
+<p>Enables Spring Boot's auto-configuration mechanism. Use case: automatic bean creation, dependency-based configuration, rapid setup.</p>
+
+<h3>Spring Boot Starter</h3>
+<p>Pre-configured dependency bundles for specific functionality. Use case: simplified dependency management, quick project setup, best practices.</p>
+
+<h3>Spring Boot Actuator</h3>
+<p>Production-ready features for monitoring and management. Use case: health checks, metrics, application monitoring, DevOps integration.</p>
+
+<h3>ApplicationRunner vs CommandLineRunner</h3>
+<p>Interfaces for running code after application startup. Use case: initialization tasks, data loading, startup operations.</p>
+
+<h2>Spring AOP</h2>
+
+<h3>Spring AOP</h3>
+<p>Aspect-Oriented Programming for cross-cutting concerns. Use case: logging, security, transactions, monitoring, caching.</p>
+
+<h3>@Aspect</h3>
+<p>Marks a class as an aspect containing advice and pointcuts. Use case: cross-cutting concern implementation, modular design, separation of concerns.</p>
+
+<h3>@Pointcut</h3>
+<p>Defines where advice should be applied. Use case: advice targeting, method selection, aspect configuration.</p>
+
+<h3>@Before</h3>
+<p>Advice executed before method execution. Use case: pre-processing, validation, logging, security checks.</p>
+
+<h3>@After</h3>
+<p>Advice executed after method execution (regardless of outcome). Use case: cleanup, logging, resource management, monitoring.</p>
+
+<h3>@AfterReturning</h3>
+<p>Advice executed after successful method return. Use case: result processing, success logging, post-processing.</p>
+
+<h3>@AfterThrowing</h3>
+<p>Advice executed when a method throws an exception. Use case: exception handling, error logging, cleanup after errors.</p>
+
+<h3>@Around</h3>
+<p>Most powerful advice, wrapping method execution. Use case: performance monitoring, caching, transaction management, complete control.</p>
+
+<h2>Spring MVC / REST</h2>
+
+<h3>Spring MVC</h3>
+<p>Web framework following the Model-View-Controller pattern. Use case: web applications, REST APIs, request handling, view rendering.</p>
+
+<h3>DispatcherServlet</h3>
+<p>Front controller handling all requests in Spring MVC. Use case: request routing, handler mapping, view resolution, centralized control.</p>
+
+<h3>@RestController</h3>
+<p>Combines @Controller and @ResponseBody for REST API development. Use case: REST APIs, JSON responses, microservices.</p>
+
+<h3>@RequestMapping</h3>
+<p>Maps requests to handler methods with URL patterns. Use case: URL routing, HTTP method mapping, request handling.</p>
+
+<h3>@GetMapping/@PostMapping/@PutMapping/@DeleteMapping</h3>
+<p>Specialized request mappings for HTTP methods. Use case: RESTful services, HTTP-method-specific handling, cleaner code.</p>
+
+<h3>@PathVariable</h3>
+<p>Extracts values from URL path segments. Use case: RESTful URLs, dynamic routing, URL parameters.</p>
+
+<h3>@RequestParam</h3>
+<p>Extracts query parameters from a request. Use case: query string handling, optional parameters, form data processing.</p>
+
+<h3>@RequestBody</h3>
+<p>Maps the request body to a method parameter (usually JSON). Use case: REST APIs, JSON processing, POST/PUT operations.</p>
+
+<h3>@ResponseBody</h3>
+<p>Converts a method's return value to the response body. Use case: JSON responses, REST APIs, AJAX endpoints.</p>
+
+<h3>@ModelAttribute</h3>
+<p>Binds request parameters to object attributes. Use case: form handling, data binding, model population.</p>
+
+<h3>Model and ModelAndView</h3>
+<p>Objects for passing data to views. Use case: MVC pattern, view data passing, template rendering.</p>
+
+<h3>ViewResolver</h3>
+<p>Resolves logical view names to actual view implementations. Use case: view technology abstraction, template resolution, rendering configuration.</p>
+
+<h3>@ControllerAdvice</h3>
+<p>Global exception handling across multiple controllers. Use case: centralized exception handling, error responses, logging.</p>
+
+<h3>@ExceptionHandler</h3>
+<p>Handles specific exceptions in controllers. Use case: exception handling, error responses, graceful error management.</p>
+
+<figure class="note-figure">
+  <img src="assets/img/http-status-codes-table.png" alt="Table of common HTTP status codes and their meaning for REST APIs">
+  <figcaption>HTTP status codes for REST responses and @ExceptionHandler mapping</figcaption>
+</figure>
+
+<h3>@Valid</h3>
+<p>Triggers validation on request parameters/body. Use case: input validation, data integrity, error prevention.</p>
+
+<h3>@Validated</h3>
+<p>Spring's validation annotation supporting validation groups. Use case: method-level validation, validation groups, complex validation scenarios.</p>
+
+<h3>HandlerInterceptor</h3>
+<p>Intercepts requests before/after handler execution. Use case: authentication, logging, request preprocessing, response modification.</p>
+
+<figure class="note-figure">
+  <img src="assets/img/filter-vs-spring-interceptor-vs-feign-interceptor-comparison.png" alt="Comparison table of Servlet Filter, Spring HandlerInterceptor, and Feign Interceptor">
+  <figcaption>Filter vs Spring interceptor vs Feign interceptor</figcaption>
+</figure>
+
+<h2>Spring Security</h2>
+
+<h3>Spring Security</h3>
+<p>Comprehensive security framework for authentication and authorization. Use case: application security, user management, access control.</p>
+
+<h3>@Secured</h3>
+<p>Method-level security annotation for role-based access. Use case: method security, role checking, access control.</p>
+
+<h3>@PreAuthorize/@PostAuthorize</h3>
+<p>Expression-based method security. Use case: complex authorization logic, dynamic security, fine-grained access control.</p>
+
+<h3>@EnableWebSecurity</h3>
+<p>Enables Spring Security web features. Use case: security configuration, web security setup, authentication.</p>
+
+<h3>@EnableMethodSecurity</h3>
+<p>Enables method-level security annotations. Use case: method security, authorization, access control.</p>
+
+<h3>UserDetailsService</h3>
+<p>Interface for loading user-specific data during authentication. Use case: custom user loading, authentication, user management.</p>
+
+<h3>PasswordEncoder</h3>
+<p>Interface for password hashing and verification. Use case: password security, authentication, credential management.</p>
+
+<h3>SecurityContextHolder</h3>
+<p>Holds security context for the current thread. Use case: authentication information access, user details retrieval, security context.</p>
+
+<figure class="note-figure">
+  <img src="assets/img/spring-security-authentication-architecture-diagram.png" alt="Diagram of Spring Security authentication architecture, filters, and context holder">
+  <figcaption>Spring Security authentication architecture</figcaption>
+</figure>
+
+<figure class="note-figure">
+  <img src="assets/img/spring-security-authentication-flow-table.png" alt="Table describing the Spring Security authentication flow step by step">
+  <figcaption>Spring Security authentication flow</figcaption>
+</figure>
+
+<figure class="note-figure">
+  <img src="assets/img/spring-security-authorization-flow-table.png" alt="Table describing the Spring Security authorization flow step by step">
+  <figcaption>Spring Security authorization flow</figcaption>
+</figure>
+
+<h3>CORS Configuration</h3>
+<p>Cross-Origin Resource Sharing configuration for web security. Use case: frontend-backend communication, API access, web security.</p>
+
+<h3>@CrossOrigin</h3>
+<p>Enables CORS for specific endpoints. Use case: frontend-backend communication, API access, cross-domain requests.</p>
+
+<h3>CSRF Protection</h3>
+<p>Cross-Site Request Forgery protection mechanism. Use case: web security, form protection, token-based security.</p>
+
+<h3>OAuth2 Integration</h3>
+<p>OAuth2 authentication and authorization support. Use case: third-party authentication, SSO, secure API access.</p>
+
+<h3>JWT Integration</h3>
+<p>JSON Web Token support for stateless authentication. Use case: microservices authentication, stateless security, token-based auth.</p>
+
+<h2>Spring Data JPA</h2>
+
+<h3>Spring Data JPA</h3>
+<p>Simplifies JPA-based data access with repositories. Use case: database operations, CRUD operations, query generation.</p>
+
+<h3>JpaRepository</h3>
+<p>Repository interface providing CRUD and batch operations. Use case: database operations, entity management, data persistence.</p>
+
+<h3>@Entity</h3>
+<p>Marks a class as a JPA entity mapped to a database table. Use case: object-relational mapping, database entities, persistence.</p>
+
+<h3>@Table</h3>
+<p>Specifies table details for entity mapping. Use case: custom table naming, schema specification, database mapping.</p>
+
+<h3>@Id</h3>
+<p>Marks a field as the primary key. Use case: entity identification, database mapping, primary key specification.</p>
+
+<h3>@GeneratedValue</h3>
+<p>Specifies the primary key generation strategy. Use case: auto-generated keys, database sequences, key management.</p>
+
+<h3>@Column</h3>
+<p>Maps an entity field to a database column. Use case: custom column mapping, database constraints, field specification.</p>
+
+<h3>@JoinColumn</h3>
+<p>Specifies the foreign key column for relationships. Use case: entity relationships, foreign key mapping, association management.</p>
+
+<h3>@OneToMany/@ManyToOne/@ManyToMany/@OneToOne</h3>
+<p>Entity relationship mappings. Use case: database relationships, entity associations, relational mapping.</p>
+
+<h3>@Query</h3>
+<p>Custom JPQL or native SQL queries in repositories. Use case: complex queries, custom database operations, performance optimization.</p>
+
+<h3>@NamedQuery</h3>
+<p>Named queries defined at the entity level. Use case: reusable queries, query organization, performance optimization.</p>
+
+<h3>@Modifying</h3>
+<p>Indicates a query modifies data (UPDATE/DELETE). Use case: data modification, bulk operations, non-select queries.</p>
+
+<h3>Specification</h3>
+<p>Type-safe query building using the Criteria API. Use case: dynamic queries, search functionality, complex filtering.</p>
+
+<h3>Pageable</h3>
+<p>Pagination and sorting support for repository methods. Use case: large dataset handling, performance optimization, user experience.</p>
+
+<h3>@EntityGraph</h3>
+<p>Controls the entity fetching strategy to avoid N+1 problems. Use case: performance optimization, lazy loading control, query optimization.</p>
+
+<h3>@CreatedDate/@LastModifiedDate</h3>
+<p>Automatic auditing of creation/modification times. Use case: data auditing, change tracking, timestamp management.</p>
+
+<h3>@CreatedBy/@LastModifiedBy</h3>
+<p>Automatic auditing of creation/modification users. Use case: user auditing, change tracking, accountability.</p>
+
+<h3>@Version</h3>
+<p>Optimistic locking support for concurrent updates. Use case: concurrency control, data consistency, conflict resolution.</p>
+
+<h2>Spring Cache</h2>
+
+<h3>Spring Cache</h3>
+<p>Declarative caching abstraction. Use case: performance optimization, data caching, response time improvement.</p>
+
+<h3>@Cacheable</h3>
+<p>Caches method return values. Use case: read-heavy operations, performance optimization, data caching.</p>
+
+<h3>@CachePut</h3>
+<p>Updates the cache with a method return value. Use case: cache updates, data synchronization, cache management.</p>
+
+<h3>@CacheEvict</h3>
+<p>Removes entries from the cache. Use case: cache invalidation, data consistency, memory management.</p>
+
+<h3>@Caching</h3>
+<p>Combines multiple cache annotations. Use case: complex caching scenarios, multiple cache operations, advanced caching.</p>
+
+<h3>CacheManager</h3>
+<p>Manages cache instances and operations. Use case: cache configuration, cache lifecycle, multi-cache management.</p>
+
+<figure class="note-figure">
+  <img src="assets/img/spring-redis-caching-config-flow-diagram.png" alt="Diagram of Spring configuration flow when using Redis as the cache provider">
+  <figcaption>Spring + Redis caching configuration flow</figcaption>
+</figure>
+
+<figure class="note-figure">
+  <img src="assets/img/caching-strategies-full-table.png" alt="Full comparison table of caching strategies such as cache-aside, read-through, write-through, and write-behind">
+  <figcaption>Caching strategies, full comparison</figcaption>
+</figure>
+
+<figure class="note-figure">
+  <img src="assets/img/top-5-caching-strategies-diagram.png" alt="Diagram summarizing the top 5 caching strategies">
+  <figcaption>Top 5 caching strategies</figcaption>
+</figure>
+
+<figure class="note-figure">
+  <img src="assets/img/redis-use-cases-table.png" alt="Table of common Redis use cases beyond caching, such as session storage and rate limiting">
+  <figcaption>Redis use cases</figcaption>
+</figure>
+
+<h2>Spring Integration &amp; Messaging (Kafka/RabbitMQ)</h2>
+
+<h3>Spring Integration</h3>
+<p>Framework for enterprise integration patterns. Use case: system integration, message routing, data transformation.</p>
+
+<h3>@MessageEndpoint</h3>
+<p>Marks a class as a message-driven endpoint. Use case: asynchronous messaging, event processing, integration patterns.</p>
+
+<h3>@ServiceActivator</h3>
+<p>Connects service methods to message channels. Use case: message processing, service integration, decoupled communication.</p>
+
+<h3>MessageChannel</h3>
+<p>Abstraction for message communication. Use case: asynchronous messaging, loose coupling, integration patterns.</p>
+
+<figure class="note-figure">
+  <img src="assets/img/kafka-flow-detailed-table.png" alt="Detailed table of the Kafka producer to broker to consumer message flow">
+  <figcaption>Kafka message flow, detailed</figcaption>
+</figure>
+
+<figure class="note-figure">
+  <img src="assets/img/kafka-topic-partitions-consumer-groups-diagram.png" alt="Diagram of Kafka topics, partitions, and consumer groups">
+  <figcaption>Kafka topics, partitions, and consumer groups</figcaption>
+</figure>
+
+<figure class="note-figure">
+  <img src="assets/img/rabbitmq-exchange-bindings-queues-diagram.png" alt="Diagram of RabbitMQ exchanges, bindings, and queues">
+  <figcaption>RabbitMQ exchanges, bindings, and queues</figcaption>
+</figure>
+
+<h2>Spring Batch</h2>
+
+<h3>Spring Batch</h3>
+<p>Framework for batch processing applications. Use case: large data processing, ETL operations, scheduled jobs.</p>
+
+<h3>@Job</h3>
+<p>Defines batch job configuration. Use case: batch processing, job scheduling, data processing workflows.</p>
+
+<h3>@Step</h3>
+<p>Defines individual steps within a batch job. Use case: processing stages, error handling, job organization.</p>
+
+<h3>ItemReader/ItemProcessor/ItemWriter</h3>
+<p>Components for reading, processing, and writing batch data. Use case: ETL operations, data transformation, bulk processing.</p>
+
+<h2>Spring Cloud</h2>
+
+<h3>Spring Cloud</h3>
+<p>Framework for distributed system patterns. Use case: microservices, cloud-native applications, distributed systems.</p>
+
+<h3>@EnableEurekaClient</h3>
+<p>Enables service registration with Eureka. Use case: service discovery, microservices, load balancing.</p>
+
+<h3>@EnableCircuitBreaker</h3>
+<p>Enables the circuit breaker pattern. Use case: fault tolerance, cascading failure prevention, resilience.</p>
+
+<h3>@FeignClient</h3>
+<p>Declarative HTTP client for service-to-service calls. Use case: microservice communication, REST client, service integration.</p>
+
+<h3>@LoadBalanced</h3>
+<p>Enables client-side load balancing for RestTemplate. Use case: service load balancing, microservices, fault tolerance.</p>
+
+<h2>Spring WebFlux (Reactive)</h2>
+
+<h3>Spring WebFlux</h3>
+<p>Reactive web framework for non-blocking applications. Use case: high-concurrency applications, reactive programming, streaming data.</p>
+
+<h3>@RestController (WebFlux)</h3>
+<p>Reactive REST controller. Use case: reactive APIs, non-blocking operations, high throughput.</p>
+
+<h3>Mono/Flux</h3>
+<p>Reactive types for 0-1 and 0-N asynchronous values. Use case: reactive programming, non-blocking operations, streaming data.</p>
+
+<h3>WebClient</h3>
+<p>Non-blocking HTTP client replacing RestTemplate. Use case: reactive HTTP calls, non-blocking communication, high performance.</p>
+
+<h2>Async, Scheduling &amp; Events</h2>
+
+<h3>@Async</h3>
+<p>Enables asynchronous method execution. Use case: background processing, performance optimization, non-blocking operations.</p>
+
+<h3>@EnableAsync</h3>
+<p>Enables asynchronous processing support. Use case: async configuration, thread pool management, performance optimization.</p>
+
+<h3>@Scheduled</h3>
+<p>Declarative task scheduling. Use case: cron jobs, periodic tasks, background processing.</p>
+
+<h3>@EnableScheduling</h3>
+<p>Enables scheduled task support. Use case: task scheduling configuration, cron jobs, periodic execution.</p>
+
+<h3>@EventListener</h3>
+<p>Handles application events. Use case: event-driven programming, loose coupling, application events.</p>
+
+<h3>ApplicationEvent</h3>
+<p>Base class for custom application events. Use case: event publishing, decoupled communication, application messaging.</p>
+
+<h2>Transactions</h2>
+
+<h3>@Transactional</h3>
+<p>Declarative transaction management. Use case: data consistency, transaction boundaries, rollback management.</p>
+
+<h3>PlatformTransactionManager</h3>
+<p>Abstraction for transaction management. Use case: transaction handling, commit/rollback operations, transaction coordination.</p>
+
+<h3>Transaction Propagation</h3>
+<p>@Transactional propagation defines how Spring should handle transactions when a method is called within another transaction.</p>
+
+<h3>When @Transactional Works</h3>
+<p>@Transactional only takes effect when the method is public, it is called via the Spring proxy (i.e. from a different bean, not a self-invocation), the bean itself is Spring-managed, and the thrown exception type is one that supports rollback.</p>
+
+<figure class="note-figure">
+  <img src="assets/img/spring-transaction-propagation-types-table.png" alt="Table of Spring transaction propagation types such as REQUIRED, REQUIRES_NEW, NESTED, and MANDATORY">
+  <figcaption>Transaction propagation types</figcaption>
+</figure>
+
+<figure class="note-figure">
+  <img src="assets/img/spring-transactional-attributes-table.png" alt="Table of @Transactional attributes such as isolation, timeout, readOnly, and rollbackFor">
+  <figcaption>@Transactional attributes</figcaption>
+</figure>
+
+<figure class="note-figure">
+  <img src="assets/img/spring-transactional-when-it-will-not-work-table.png" alt="Table listing common cases where @Transactional silently does not work, such as self-invocation and private methods">
+  <figcaption>Cases where @Transactional will not work</figcaption>
+</figure>
+
+<h2>Observability</h2>
+
+<h3>Micrometer &amp; Telemetry</h3>
+<p>Collects application metrics data for downstream monitoring systems. Use case: instrumenting Spring applications for observability.</p>
+
+<h3>Sleuth, Zipkin, Jaeger</h3>
+<p>Trace requests across distributed services. Use case: distributed tracing, latency analysis across microservices.</p>
+
+<h3>Prometheus &amp; Grafana</h3>
+<p>Metrics collection and dashboards. Use case: visualizing application and infrastructure metrics.</p>
+
+<h3>ELK &amp; Splunk</h3>
+<p>Logs aggregation and search. Use case: centralized log search and analysis.</p>
+
+<h3>Dynatrace, Datadog</h3>
+<p>All-in-one observability solutions. Use case: combined metrics, tracing, and logging in a single platform.</p>
+
+<h2>Real-World Architecture Reference</h2>
+<p>Metrics and configuration tables from a production Kafka-based fraud and credit risk platform
+  (see <a href="#proj-citibank">Citibank project write-up</a>), useful for grounding Spring/Kafka
+  topics in a concrete real system.</p>
+
+<figure class="note-figure">
+  <img src="assets/img/citibank-kafka-fraud-credit-risk-architecture-diagram.png" alt="Citibank Kafka fraud and credit risk architecture diagram">
+  <figcaption>Fraud and credit risk architecture</figcaption>
+</figure>
+<figure class="note-figure">
+  <img src="assets/img/citibank-system-scale-performance-metrics-table.png" alt="Citibank system scale and performance metrics table">
+  <figcaption>System scale and performance</figcaption>
+</figure>
+<figure class="note-figure">
+  <img src="assets/img/citibank-kafka-cluster-topics-metrics-table.png" alt="Citibank Kafka cluster and topics metrics table">
+  <figcaption>Kafka cluster and topics</figcaption>
+</figure>
+<figure class="note-figure">
+  <img src="assets/img/citibank-kafka-producer-configuration-table.png" alt="Citibank Kafka producer configuration table">
+  <figcaption>Kafka producer configuration</figcaption>
+</figure>
+<figure class="note-figure">
+  <img src="assets/img/citibank-kafka-consumer-configuration-table.png" alt="Citibank Kafka consumer configuration table">
+  <figcaption>Kafka consumer configuration</figcaption>
+</figure>
+<figure class="note-figure">
+  <img src="assets/img/citibank-postgresql-database-metrics-table.png" alt="Citibank PostgreSQL database metrics table">
+  <figcaption>PostgreSQL database metrics</figcaption>
+</figure>
+<figure class="note-figure">
+  <img src="assets/img/citibank-redis-state-caching-metrics-table.png" alt="Citibank Redis state and caching metrics table">
+  <figcaption>Redis state and caching</figcaption>
+</figure>
+<figure class="note-figure">
+  <img src="assets/img/citibank-threading-concurrency-metrics-table.png" alt="Citibank threading and concurrency metrics table">
+  <figcaption>Threading and concurrency</figcaption>
+</figure>
+<figure class="note-figure">
+  <img src="assets/img/citibank-deployment-scaling-metrics-table.png" alt="Citibank deployment and scaling metrics table">
+  <figcaption>Deployment and scaling</figcaption>
+</figure>
+<figure class="note-figure">
+  <img src="assets/img/citibank-reliability-failure-handling-metrics-table.png" alt="Citibank reliability and failure handling metrics table">
+  <figcaption>Reliability and failure handling</figcaption>
+</figure>
+<figure class="note-figure">
+  <img src="assets/img/citibank-monitoring-observability-metrics-table.png" alt="Citibank monitoring and observability metrics table">
+  <figcaption>Monitoring and observability</figcaption>
+</figure>
+
+</div>

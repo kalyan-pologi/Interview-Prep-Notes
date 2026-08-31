@@ -1,0 +1,93 @@
+<div class="section-header">
+  <div class="tag">Frontend</div>
+  <h1>🎨 CSS</h1>
+  <p>Cascading Style Sheets reference.</p>
+</div>
+
+<div class="note-body">
+  <h2>Selectors</h2>
+  <p>Patterns used to target HTML elements for styling.</p>
+  <pre><code>h1 { color: blue; }              /* element */
+.button { padding: 10px; }       /* class */
+#header { background: white; }   /* id */
+[type="email"] { border: 1px solid gray; }  /* attribute */</code></pre>
+
+  <h2>Box Model</h2>
+  <p>How an element is structured: content, padding, border, then margin, from the inside out.</p>
+  <pre><code>.card {
+  padding: 20px;
+  margin: 10px;
+  border: 1px solid #ddd;
+}
+
+.centered { margin: 0 auto; }
+.button { padding: 12px 24px; border-radius: 4px; }</code></pre>
+
+  <h2>Flexbox</h2>
+  <p>One-dimensional layout for arranging items in a row or a column.</p>
+  <pre><code>.center { display: flex; justify-content: center; align-items: center; }
+.navbar { display: flex; justify-content: space-between; }
+.card-grid { display: flex; flex-wrap: wrap; gap: 20px; }</code></pre>
+
+  <h2>Grid</h2>
+  <p>Two-dimensional layout for more complex arrangements than flexbox handles well.</p>
+  <pre><code>.page {
+  display: grid;
+  grid-template-areas:
+    "header header"
+    "sidebar main"
+    "footer footer";
+}
+
+.gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+}
+
+.dashboard { grid-template-columns: 250px 1fr; }</code></pre>
+
+  <h2>Responsive Design</h2>
+  <p>Adapting layout to different screen sizes with media queries.</p>
+  <pre><code>/* Mobile-first */
+@media (min-width: 768px) {
+  .container { max-width: 1200px; }
+}
+
+@media (max-width: 600px) {
+  .desktop-only { display: none; }
+}
+
+/* Flexible typography without a media query at all */
+h1 { font-size: clamp(1rem, 2.5vw, 2rem); }</code></pre>
+
+  <h2>Animations & Transitions</h2>
+  <pre><code>.card {
+  transition: all 0.3s ease;
+}
+.card:hover { transform: scale(1.05); }
+
+@keyframes spin { to { transform: rotate(360deg); } }
+.spinner { animation: spin 1s linear infinite; }</code></pre>
+
+  <h2>Positioning</h2>
+  <ul>
+    <li><b>Static</b>, normal document flow, top/left have no effect. Default for every element.</li>
+    <li><b>Relative</b>, stays in normal flow but is visually offset, the space it originally
+      occupied is preserved.</li>
+    <li><b>Absolute</b>, taken out of flow, positioned relative to the nearest positioned
+      ancestor (the closest parent that is not <code>static</code>).</li>
+    <li><b>Fixed</b>, taken out of flow, positioned relative to the viewport, stays put on
+      scroll.</li>
+    <li><b>Sticky</b>, behaves as relative until scroll crosses a threshold, then behaves as
+      fixed.</li>
+  </ul>
+
+  <h2>Units</h2>
+  <ul>
+    <li><code>px</code>, a fixed size, does not scale with anything</li>
+    <li><code>%</code>, relative to the parent element's size</li>
+    <li><code>em</code>, relative to the parent element's font size</li>
+    <li><code>rem</code>, relative to the root (<code>html</code>) element's font size, generally
+      safer than <code>em</code> since it does not compound across nested elements</li>
+  </ul>
+</div>

@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time you received critical/negative feedback. How did you respond?</h1>
+  <p>Behavioral question 10 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Being told my exception handling was hiding real failures from users</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Early in building an appraisal history save flow, I had structured the code so that if a database save failed, it would silently log the error and just return the computed valuation to the user without any indication anything had gone wrong.</div>
+    <div class="star-row"><span class="star-label">Task:</span> A reviewer pointed out that while returning the valuation to the user was the right instinct, silently swallowing the failure meant the team would have no visibility into how often this was actually happening.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I took that feedback and reworked the approach using Spring Retry with Retryable and Recover, so a transient failure gets retried automatically with backoff, and if it still fails after retries are exhausted, the Recover method escalates to a clearly marked critical log entry, while still returning the valuation to the user instead of failing the request on a storage problem outside the user's control.</div>
+    <div class="star-row"><span class="star-label">Result:</span> We kept the good user experience of never blocking someone on a rare storage hiccup, but gained real visibility into how often it was happening, which the original silent approach didn't give us. It taught me that failing gracefully for the user and failing silently for the team are two very different things, and you need both handled deliberately.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Being told a cache design decision needed a fallback for its own failure mode</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> When I built the kill switch for the caching layer using a config property, a teammate reviewing it asked what would happen if the caching database itself became unavailable, since the application depended on that DataSource being creatable.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I hadn't fully thought through that the caching feature being optional at the config level didn't automatically mean the application could start cleanly if the cache database was unreachable.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I went back and made sure the caching configuration and its DataSource were only instantiated when the cache.enabled property was true, using ConditionalOnProperty, so turning the flag off completely prevented any attempt to create that DataSource bean at all, rather than creating it eagerly and just not calling it, which would have still failed application startup on a bad connection string.</div>
+    <div class="star-row"><span class="star-label">Result:</span> That closed a real gap, since now the kill switch isn't just a behavioral flag, it genuinely removes the dependency on the cache database when turned off. It reminded me to think through failure of my own infrastructure, not just failure of the systems I'm calling.</div>
+  </div>

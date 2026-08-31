@@ -1,0 +1,189 @@
+<div class="section-header">
+  <div class="tag">Frontend</div>
+  <h1>📜 JavaScript</h1>
+  <p>JavaScript reference.</p>
+</div>
+
+<div class="note-body">
+  <h2>Variables & Data Types</h2>
+  <p>Storing and manipulating different kinds of data, user info, arrays, objects, dynamic data
+    storage.</p>
+  <pre><code>const userName = "John";
+let age = 25;
+const products = ["laptop", "phone", "tablet"];
+const user = { name: "John", email: "john@example.com" };</code></pre>
+
+  <h2>Functions</h2>
+  <p>Reusable blocks of code for a specific task, event handlers, data processing, API calls.</p>
+  <pre><code>function handleClick() {
+  console.log("Clicked!");
+}
+
+const calculateTotal = (items) =>
+  items.reduce((sum, item) => sum + item.price, 0);
+
+async function fetchUserData(id) {
+  const response = await fetch(`/api/users/${id}`);
+}</code></pre>
+
+  <h2>DOM Manipulation</h2>
+  <p>Dynamically changing HTML elements and their properties, updating content, adding elements,
+    wiring up event listeners.</p>
+  <pre><code>document.getElementById("title").textContent = "New Title";
+const newDiv = document.createElement("div");
+document.body.appendChild(newDiv);
+button.addEventListener("click", handleClick);</code></pre>
+
+  <h2>Event Handling</h2>
+  <p>Responding to user interactions and browser events, form submission, keyboard shortcuts,
+    dynamic interactions.</p>
+  <pre><code>form.addEventListener("submit", (e) => {
+  e.preventDefault();
+  processForm();
+});
+
+document.addEventListener("keydown", (e) => {
+  if (e.ctrlKey && e.key === "s") save();
+});
+
+element.addEventListener("mouseenter", showTooltip);</code></pre>
+
+  <h2>Asynchronous JavaScript</h2>
+  <p>Handling operations that do not block code execution, API requests, timers, file operations,
+    database queries.</p>
+  <pre><code>fetch("/api/data")
+  .then(response => response.json())
+  .then(data => updateUI(data));
+
+const userData = await getUserById(123);
+setTimeout(() => hideNotification(), 3000);</code></pre>
+
+  <h2>Array Methods</h2>
+  <p>Built-in methods for transforming arrays without writing manual loops, filtering data,
+    transforming data, finding items, reducing values.</p>
+  <pre><code>const adults = users.filter(user => user.age >= 18);
+const userNames = users.map(user => user.name);
+const user = users.find(u => u.id === 123);</code></pre>
+
+  <h2>Object-Oriented Programming</h2>
+  <p>Organizing code with classes and objects for structure, user classes, component patterns,
+    data models, encapsulation.</p>
+  <pre><code>class User {
+  constructor(name, email) {
+    this.name = name;
+    this.email = email;
+  }
+}
+
+class Product {
+  calculateDiscount() {
+    return this.price * this.discountRate;
+  }
+}</code></pre>
+
+  <h2>Local Storage & Session Storage</h2>
+  <p>Storing data in the browser between sessions, saving preferences, remembering form data,
+    shopping cart, user settings. <code>localStorage</code> persists across browser sessions,
+    <code>sessionStorage</code> clears when the tab closes.</p>
+  <pre><code>localStorage.setItem("theme", "dark");
+sessionStorage.setItem("formData", JSON.stringify(formObject));
+localStorage.setItem("cart", JSON.stringify(cartItems));</code></pre>
+
+  <h2>Error Handling</h2>
+  <p>Managing runtime errors gracefully, try-catch blocks, API error handling, form validation.</p>
+  <pre><code>try {
+  riskyOperation();
+} catch (error) {
+  showErrorMessage(error.message);
+}
+
+fetch("/api/data").catch(error => showOfflineMessage());
+if (!email.includes("@")) throw new Error("Invalid email");</code></pre>
+
+  <h2>Modules</h2>
+  <p>Organizing code into separate files, exporting utilities, importing functions, default
+    exports.</p>
+  <pre><code>export const formatDate = (date) => date.toLocaleDateString();
+import { formatDate, validateEmail } from "./utils.js";
+export default class ApiClient { /* ... */ }</code></pre>
+
+  <h2>Closures</h2>
+  <p>A function that remembers variables from its outer scope even after that scope has finished
+    running. Used for encapsulation, private variables, function factories, debouncing and
+    throttling.</p>
+  <pre><code>function makeCounter() {
+  let count = 0;
+  return function () {
+    count++;
+    return count;
+  };
+}
+
+const counter = makeCounter();
+counter(); // 1
+counter(); // 2</code></pre>
+
+  <h2>Promises</h2>
+  <p>An object representing the eventual completion or failure of an async operation, API
+    requests, chaining async tasks, replacing callback hell.</p>
+  <pre><code>fetch("/api/user")
+  .then(res => res.json())
+  .then(data => console.log(data))
+  .catch(err => console.error(err));</code></pre>
+
+  <h2>Async / Await</h2>
+  <p>Syntactic sugar over promises that makes async code read like synchronous code, cleaner
+    sequential logic and error handling with try/catch.</p>
+  <pre><code>async function loadUser() {
+  try {
+    const res = await fetch("/api/user");
+    const data = await res.json();
+    console.log(data);
+  } catch (err) {
+    console.error(err);
+  }
+}</code></pre>
+
+  <h2>Callback Hell</h2>
+  <p>Deeply nested callbacks that make code hard to read and maintain, a code smell from legacy
+    async patterns. The fix is switching to promises or async/await.</p>
+  <pre><code>getUser(id, user => {
+  getOrders(user.id, orders => {
+    getProducts(orders, products => {
+      console.log(products);
+    });
+  });
+});</code></pre>
+
+  <h2>Prototype & Prototypal Inheritance</h2>
+  <p>Every function and object in JavaScript has a hidden prototype object used to share methods
+    between instances without duplicating them in memory, and to enable inheritance. When a
+    property is not found directly on an object, JavaScript looks up the prototype chain for it.</p>
+  <pre><code>function Person(name) {
+  this.name = name;
+}
+
+Person.prototype.sayHello = function () {
+  console.log("Hello " + this.name);
+};</code></pre>
+
+  <h2>Scope</h2>
+  <p>Defines where a variable is accessible, controls variable visibility and avoids naming
+    collisions across a codebase.</p>
+  <pre><code>{
+  let x = 10; // block scope
+}
+
+function test() {
+  var y = 20; // function scope
+}
+
+const z = 30; // global scope</code></pre>
+
+  <h2>Hoisting</h2>
+  <p>JavaScript moves declarations to the top of their scope during compilation, before the code
+    actually runs. <code>var</code> declarations are hoisted and initialized as
+    <code>undefined</code>, <code>let</code> and <code>const</code> are hoisted but stay in a
+    temporal dead zone until their actual line executes, which is why using them before
+    declaration throws an error instead of silently returning <code>undefined</code>.</p>
+</div>

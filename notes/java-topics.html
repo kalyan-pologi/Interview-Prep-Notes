@@ -1,0 +1,345 @@
+<div class="section-header">
+  <div class="tag">Java</div>
+  <h1>☕ Java Topics</h1>
+  <p>Definitions and use cases for core Java concepts, from language fundamentals through JVM internals and modern language features.</p>
+</div>
+<div class="note-body">
+
+  <h2>Language Fundamentals</h2>
+
+  <h3>Variables</h3>
+  <p>Named memory locations that store data values. Use case: storing user input, calculation results, configuration values.</p>
+
+  <h3>Data Types</h3>
+  <p>Define the type of data a variable can hold (int, double, boolean, char, etc.). Use case: ensuring type safety and memory optimization.</p>
+
+  <h3>Operators</h3>
+  <p>Symbols that perform operations on operands (+, -, *, /, %, ==, !=, etc.). Use case: mathematical calculations, comparisons, logical operations.</p>
+
+  <h3>Control Statements</h3>
+  <p>Direct program flow using if-else, switch, and loops. Use case: decision making, repetitive tasks, conditional execution.</p>
+
+  <h3>Arrays</h3>
+  <p>A collection of elements of the same type stored in contiguous memory. Use case: storing lists of data, matrix operations, bulk data processing.</p>
+
+  <h3>Strings</h3>
+  <p>A sequence of characters, immutable in Java. Use case: text processing, user interfaces, data manipulation.</p>
+
+  <h3>Methods</h3>
+  <p>Reusable blocks of code that perform specific tasks. Use case: code modularity, avoiding repetition, organizing functionality.</p>
+
+  <h3>Regular Expressions</h3>
+  <p>Pattern matching for string operations. Use case: data validation, text parsing, search and replace operations.</p>
+
+  <h3>Date and Time API</h3>
+  <p>Modern date/time handling via <code>LocalDate</code>, <code>LocalTime</code>, and <code>LocalDateTime</code>. Use case: date calculations, formatting, timezone handling.</p>
+
+  <h2>Object-Oriented Programming</h2>
+
+  <h3>Classes</h3>
+  <p>A blueprint for creating objects, encapsulating data and behavior. Use case: object-oriented design, modeling real-world entities.</p>
+
+  <h3>Objects</h3>
+  <p>Instances of classes with state and behavior. Use case: creating multiple instances, data encapsulation, real-world modeling.</p>
+
+  <h3>Constructors</h3>
+  <p>Special methods called when objects are created. Use case: object initialization, setting default values, parameter validation.</p>
+
+  <h3>Inheritance</h3>
+  <p>A mechanism where one class acquires the properties of another. Use case: code reusability, hierarchical relationships, polymorphism.</p>
+
+  <h3>Polymorphism</h3>
+  <p>The ability of objects to take multiple forms. Use case: method overriding, interface implementation, flexible code design.</p>
+
+  <h3>Encapsulation</h3>
+  <p>Hiding internal implementation details using access modifiers. Use case: data security, maintainable code, controlled access.</p>
+
+  <h3>Abstraction</h3>
+  <p>Hiding complex implementation details and showing only essential features. Use case: interface design, code simplification, modularity.</p>
+
+  <h3>Interfaces</h3>
+  <p>Contracts defining methods that implementing classes must provide. Use case: multiple inheritance, loose coupling, API design.</p>
+
+  <h3>Abstract Classes</h3>
+  <p>Classes that cannot be instantiated and may contain abstract methods. Use case: common base functionality, enforcing method implementation.</p>
+
+  <h3>Packages</h3>
+  <p>Namespaces that organize related classes and interfaces. Use case: code organization, avoiding naming conflicts, access control.</p>
+
+  <h3>Inner Classes</h3>
+  <p>Classes defined within other classes. Use case: logical grouping, accessing outer class members, event handling.</p>
+
+  <h3>Static Members</h3>
+  <p>Class-level variables and methods shared by all instances. Use case: utility methods, constants, factory methods, counters.</p>
+
+  <h3>Final Keyword</h3>
+  <p>Makes variables, methods, or classes unchangeable. Use case: constants, preventing inheritance, immutable objects.</p>
+
+  <h3>Super Keyword</h3>
+  <p>References parent class members and constructors. Use case: accessing parent methods, constructor chaining, method overriding.</p>
+
+  <h3>This Keyword</h3>
+  <p>References the current object instance. Use case: resolving naming conflicts, method chaining, constructor calls.</p>
+
+  <h3>Access Modifiers</h3>
+  <p>Control the visibility of classes, methods, and variables (public, private, protected, default). Use case: encapsulation, security, API design.</p>
+
+  <h3>Method Overloading</h3>
+  <p>Multiple methods with the same name but different parameters. Use case: flexible method usage, convenience methods, parameter variations.</p>
+
+  <h3>Method Overriding</h3>
+  <p>Redefining parent class methods in child classes. Use case: polymorphism, customizing inherited behavior, runtime method selection.</p>
+
+  <h3>Wrapper Classes</h3>
+  <p>Object representations of primitive types (Integer, Double, Boolean). Use case: collections usage, null values, utility methods.</p>
+
+  <h3>Autoboxing/Unboxing</h3>
+  <p>Automatic conversion between primitives and wrapper classes. Use case: seamless primitive-object integration, collections compatibility.</p>
+
+  <h3>Enum</h3>
+  <p>A special class representing a fixed set of constants. Use case: type-safe constants, switch statements, configuration options.</p>
+
+  <h3>Immutable Objects</h3>
+  <p>Objects whose state cannot be changed after creation. Use case: thread safety, hashmap keys, defensive programming, caching.</p>
+
+  <h3>Records (Java 14+)</h3>
+  <p>Immutable data carrier classes. Use case: data transfer objects, value objects, reducing boilerplate code.</p>
+
+  <h3>Sealed Classes (Java 17+)</h3>
+  <p>Classes with a restricted inheritance hierarchy. Use case: controlled inheritance, pattern matching, domain modeling.</p>
+
+  <h3>Switch Expressions (Java 14+)</h3>
+  <p>An enhanced switch with expression capability. Use case: cleaner conditional logic, pattern matching, functional style.</p>
+
+  <h3>Text Blocks (Java 15+)</h3>
+  <p>Multi-line string literals with better formatting. Use case: SQL queries, JSON templates, HTML content.</p>
+
+  <h2>Exceptions, I/O &amp; Serialization</h2>
+
+  <h3>Exception Handling</h3>
+  <p>Managing runtime errors using try-catch-finally blocks. Use case: error recovery, program stability, user-friendly error messages.</p>
+
+  <h3>Checked vs Unchecked Exceptions</h3>
+  <p>Exception types that require different handling approaches: checked exceptions must be declared or caught, unchecked exceptions don't. Use case: error handling strategy, API design, code reliability.</p>
+
+  <h3>File I/O</h3>
+  <p>Reading from and writing to files using streams. Use case: data persistence, configuration files, log files, data exchange.</p>
+
+  <h3>Serialization</h3>
+  <p>Converting objects to byte streams for storage or transmission. Use case: object persistence, network communication, caching.</p>
+
+  <h3>JSON Parsing</h3>
+  <p>Converting between Java objects and JSON format. Use case: web APIs, data exchange, configuration files, REST services.</p>
+
+  <h2>Collections &amp; Generics</h2>
+
+  <h3>Collections Framework</h3>
+  <p>Pre-built data structures such as List, Set, Map, and Queue. Use case: dynamic data storage, efficient algorithms, data manipulation.</p>
+
+  <figure class="note-figure">
+    <img src="assets/img/java-collections-overview-table.png" alt="Overview table of Java Collections Framework interfaces and implementations">
+    <figcaption>Java Collections Framework overview: core interfaces and their common implementations.</figcaption>
+  </figure>
+
+  <h3>Generics</h3>
+  <p>Type parameters for classes and methods that enable type safety. Use case: type-safe collections, reusable code, compile-time error detection.</p>
+
+  <h3>Collection Performance</h3>
+  <p>The time/space complexity of different collection operations. Use case: algorithm optimization, data structure selection, performance tuning.</p>
+
+  <h3>Equals() and HashCode()</h3>
+  <p>Methods for object comparison and hash-based collections. Use case: collections (HashMap, HashSet), object equality, data integrity.</p>
+
+  <h3>Comparable vs Comparator</h3>
+  <p>Interfaces for defining object ordering and sorting: Comparable defines a class's natural ordering, Comparator defines external, pluggable ordering strategies. Use case: collections sorting, TreeSet/TreeMap, custom sorting logic.</p>
+
+  <figure class="note-figure">
+    <img src="assets/img/java-comparator-sorting-techniques-table.png" alt="Table comparing Comparator sorting techniques in Java">
+    <figcaption>Comparator sorting techniques compared: lambdas, method references, and chained comparators.</figcaption>
+  </figure>
+
+  <h3>Fail-fast vs Fail-safe Iterators</h3>
+  <p>Iterator behaviors during concurrent modifications: fail-fast iterators throw <code>ConcurrentModificationException</code>, fail-safe iterators operate on a copy of the collection. Use case: collection iteration safety, concurrent programming, error detection.</p>
+
+  <h3>ConcurrentHashMap</h3>
+  <p>A thread-safe hash map implementation. Use case: concurrent applications, thread-safe caching, high-performance maps.</p>
+
+  <h3>WeakReference</h3>
+  <p>A reference that doesn't prevent garbage collection. Use case: memory-sensitive caches, observer patterns, preventing memory leaks.</p>
+
+  <h2>Functional Programming &amp; Streams</h2>
+
+  <h3>Lambda Expressions</h3>
+  <p>Anonymous functions for functional programming. Use case: event handling, stream operations, cleaner code, functional interfaces.</p>
+
+  <h3>Functional Interfaces</h3>
+  <p>Interfaces with a single abstract method, used with lambdas. Use case: lambda expressions, stream API, functional programming.</p>
+
+  <figure class="note-figure">
+    <img src="assets/img/java-functional-interfaces-table.png" alt="Table of common Java functional interfaces (Function, Supplier, Consumer, Predicate, etc.)">
+    <figcaption>Common built-in functional interfaces: Function, Supplier, Consumer, Predicate, and their variants.</figcaption>
+  </figure>
+
+  <h3>Method References</h3>
+  <p>Shorthand for lambda expressions that call existing methods. Use case: stream operations, functional programming, cleaner code.</p>
+
+  <h3>Default Methods</h3>
+  <p>Interface methods that include an implementation. Use case: interface evolution, multiple inheritance, backward compatibility.</p>
+
+  <h3>Stream API</h3>
+  <p>A functional approach to process collections of data. Use case: data filtering, mapping, reducing, parallel processing.</p>
+
+  <h3>Optional Class</h3>
+  <p>A container for potentially null values. Use case: null pointer prevention, functional programming, cleaner null handling.</p>
+
+  <h2>Concurrency &amp; Multithreading</h2>
+
+  <h3>Multithreading</h3>
+  <p>Concurrent execution of multiple threads. Use case: parallel processing, responsive UIs, server applications, performance optimization.</p>
+
+  <h3>Synchronization</h3>
+  <p>Controlling access to shared resources in multithreaded environments. Use case: thread safety, preventing data corruption, coordinating threads.</p>
+
+  <h3>Volatile Keyword</h3>
+  <p>Ensures variable visibility across threads. Use case: thread synchronization, atomic operations, lock-free programming.</p>
+
+  <h3>Deadlock</h3>
+  <p>A situation where threads wait indefinitely for each other. Use case: multithreading debugging, synchronization design, performance issues.</p>
+
+  <h3>Race Condition</h3>
+  <p>Unpredictable behavior due to the timing of thread execution. Use case: concurrent programming, thread safety, data consistency.</p>
+
+  <h3>Thread Pool</h3>
+  <p>A managed collection of reusable threads. Use case: performance optimization, resource management, scalable applications.</p>
+
+  <h3>Executor Framework</h3>
+  <p>High-level threading utilities for task execution. Use case: concurrent task management, thread lifecycle, asynchronous processing.</p>
+
+  <h3>Future and CompletableFuture</h3>
+  <p>Types representing asynchronous computation results. Use case: non-blocking operations, parallel processing, reactive programming.</p>
+
+  <h3>Virtual Threads (Java 21+)</h3>
+  <p>Lightweight threads for high-concurrency applications. Use case: scalable server applications, reactive programming, I/O intensive tasks.</p>
+
+  <figure class="note-figure">
+    <img src="assets/img/java-concurrency-cheat-sheet-collections-1.png" alt="Java concurrency cheat sheet part 1 covering thread-safe collections">
+    <figcaption>Concurrency cheat sheet (1 of 2): thread-safe collection choices and their tradeoffs.</figcaption>
+  </figure>
+
+  <figure class="note-figure">
+    <img src="assets/img/java-concurrency-cheat-sheet-collections-2.png" alt="Java concurrency cheat sheet part 2 covering thread-safe collections">
+    <figcaption>Concurrency cheat sheet (2 of 2): more thread-safe collection choices and their tradeoffs.</figcaption>
+  </figure>
+
+  <h2>JVM Internals &amp; Memory Management</h2>
+
+  <h3>JVM (Java Virtual Machine)</h3>
+  <p>The runtime environment that executes Java bytecode. Use case: platform independence, memory management, security.</p>
+
+  <h3>Garbage Collection</h3>
+  <p>Automatic memory management by reclaiming unused objects. Use case: memory optimization, preventing memory leaks, performance tuning.</p>
+
+  <h3>Memory Management</h3>
+  <p>Understanding heap, stack, method area, and garbage collection. Use case: performance tuning, memory leak prevention, application optimization.</p>
+
+  <h3>OutOfMemoryError</h3>
+  <p>A runtime error thrown when the JVM runs out of memory. Use case: memory debugging, performance analysis, application scaling.</p>
+
+  <h3>Memory Leaks</h3>
+  <p>Objects that can no longer be garbage collected but are no longer useful. Use case: performance debugging, memory optimization, long-running applications.</p>
+
+  <h3>Stack Overflow</h3>
+  <p>An error thrown when the call stack exceeds its maximum depth. Use case: recursion debugging, algorithm optimization, stack size tuning.</p>
+
+  <h3>String Pool</h3>
+  <p>A special memory area that stores string literals to optimize memory. Use case: memory optimization, string comparison performance, literal reuse.</p>
+
+  <h3>ClassLoader</h3>
+  <p>The component that loads Java classes into the JVM. Use case: dynamic class loading, plugin systems, application modularity.</p>
+
+  <h3>Classpath</h3>
+  <p>The path where the JVM looks for class files and resources. Use case: application deployment, library management, resource loading.</p>
+
+  <h3>Classpath vs Modulepath</h3>
+  <p>Different ways to specify application dependencies: classpath is the traditional flat dependency list, modulepath is the Java 9+ module-aware mechanism. Use case: application deployment, dependency management, module system.</p>
+
+  <h3>Module System (Java 9+)</h3>
+  <p>Organizing code into modules with explicit dependencies. Use case: application modularity, dependency management, security.</p>
+
+  <h3>Static vs Instance Initialization Blocks</h3>
+  <p>Code blocks executed during class or object initialization. Use case: complex initialization logic, resource setup, configuration.</p>
+
+  <h3>Bytecode</h3>
+  <p>The intermediate representation of Java source code that the JVM executes. Use case: understanding JVM internals, performance analysis, code generation.</p>
+
+  <h3>JIT Compiler</h3>
+  <p>The Just-In-Time compiler that performs runtime optimization. Use case: performance optimization, understanding JVM behavior, tuning applications.</p>
+
+  <h3>JMX (Java Management Extensions)</h3>
+  <p>A framework for application monitoring and management. Use case: application monitoring, performance metrics, remote management.</p>
+
+  <h3>Profiling</h3>
+  <p>Analyzing application performance and resource usage. Use case: performance optimization, memory leak detection, bottleneck identification.</p>
+
+  <h2>Reflection, Annotations &amp; Build Tooling</h2>
+
+  <h3>Annotations</h3>
+  <p>Metadata that provides information about code. Use case: configuration, code generation, runtime processing, framework integration.</p>
+
+  <h3>Reflection</h3>
+  <p>Examining and modifying classes, methods, and fields at runtime. Use case: frameworks, serialization, testing, dynamic loading.</p>
+
+  <h3>JDBC</h3>
+  <p>Java Database Connectivity for database operations. Use case: database integration, data persistence, enterprise applications.</p>
+
+  <h3>Hibernate/JPA</h3>
+  <p>Object-relational mapping frameworks. Use case: database operations, entity management, data persistence layer.</p>
+
+  <h3>JAR Files</h3>
+  <p>Java Archive files containing compiled classes and resources. Use case: application packaging, library distribution, deployment.</p>
+
+  <h3>Maven/Gradle</h3>
+  <p>Build automation and dependency management tools. Use case: project management, dependency resolution, build automation.</p>
+
+  <h3>Logging</h3>
+  <p>Recording application events and errors. Use case: debugging, monitoring, auditing, troubleshooting.</p>
+
+  <h3>Documentation (JavaDoc)</h3>
+  <p>The standard format for documenting Java code. Use case: API documentation, code maintenance, team collaboration.</p>
+
+  <h2>Testing</h2>
+
+  <h3>Unit Testing (JUnit)</h3>
+  <p>A framework for testing individual components. Use case: code quality assurance, regression testing, test-driven development.</p>
+
+  <h3>JUnit 5</h3>
+  <p>A modern testing framework with advanced features. Use case: unit testing, parameterized tests, test lifecycle management.</p>
+
+  <h3>Mockito</h3>
+  <p>A mocking framework for unit testing. Use case: test isolation, dependency mocking, behavior verification.</p>
+
+  <h2>Design Patterns</h2>
+
+  <p>Design patterns are reusable solutions to common programming problems. Use case: code organization, maintainability, best practices implementation.</p>
+
+  <h3>Singleton Pattern</h3>
+  <p>A design pattern that ensures a single instance of a class. Use case: configuration objects, logging, database connections, caching.</p>
+
+  <h3>Factory Pattern</h3>
+  <p>Creates objects without specifying their exact classes. Use case: object creation abstraction, loose coupling, polymorphism.</p>
+
+  <h3>Observer Pattern</h3>
+  <p>Defines a dependency between objects for state change notifications. Use case: event handling, MVC architecture, publish-subscribe systems.</p>
+
+  <h3>Builder Pattern</h3>
+  <p>Constructs complex objects step by step. Use case: object creation with many parameters, immutable objects, fluent APIs.</p>
+
+  <h3>Dependency Injection</h3>
+  <p>Providing dependencies to objects rather than creating them internally. Use case: loose coupling, testing, configuration management.</p>
+
+  <figure class="note-figure">
+    <img src="assets/img/111-java-interview-prep-questions-cheatsheet.jpg" alt="Cheat sheet listing 111 Java interview prep questions">
+    <figcaption>Quick-reference cheat sheet of 111 common Java interview questions.</figcaption>
+  </figure>
+
+</div>

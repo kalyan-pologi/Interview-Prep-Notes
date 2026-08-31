@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Give an example of a time you faced a conflict on a team. How did you handle it?</h1>
+  <p>Behavioral question 6 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Disagreeing on whether to fork the database schema for two different data shapes</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> We had two different valuation engines producing appraisal data in structurally different shapes, one giving dollar based adjustments, the other giving percentage based adjustments. Some teammates felt the cleanest solution was to create a second schema specifically for the percentage based engine.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I disagreed, because I felt that would double the number of places to maintain query logic and reporting logic going forward, for what was really the same conceptual data.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I proposed instead writing a normalizer that converts the percentage adjustments into dollar amounts at write time, multiplying each percentage by sale price, so both engines could write into one shared schema, with some columns simply staying null for the engine that didn't produce that data. I walked through the tradeoffs with the team, being clear that some columns would go unused for one engine, but that this was a smaller cost than maintaining two schemas and two sets of joins for every future report.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The team agreed to go with the single schema plus normalizer approach. It's held up well since, and any new reporting or query work only has to be written once instead of twice.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: A disagreement over synchronous versus asynchronous notification publishing</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> When building the event driven notification pipeline on Kafka, a message send was calling the notification publish step synchronously, inline with the main request. Under load, if the broker was slow, this could add up to 30 seconds of delay to a simple send operation, but not everyone initially agreed this was worth changing.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I needed to convince the team that this coupling between a core user action and a downstream, less critical system was the wrong tradeoff.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I laid out the actual failure scenario clearly, showing that if Kafka itself was ever briefly unavailable or slow, the producer's send call blocking on an ack would directly block core chat sends, which is a much worse user experience than a notification arriving a second or two late. I proposed converting the publish call to fire and forget using Async, with failures caught and logged inside that async method rather than propagated back to the caller, so a broker hiccup could never surface as a failed message send.</div>
+    <div class="star-row"><span class="star-label">Result:</span> We aligned on that direction, converted the call to Async, and it decoupled the reliability of a secondary system from the reliability of the core feature, which everyone agreed afterward was clearly the right call.</div>
+  </div>

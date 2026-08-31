@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ How do you handle unclear or changing requirements?</h1>
+  <p>Behavioral question 13 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Building enquiry sessions when the data model assumed a transaction always existed</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> We were asked to let a user start a chat with a transaction coordinator before any actual real estate transaction existed in the system, but the entire chat data model, from session creation to attachment lookups, had been built assuming a transactionId was always present.</div>
+    <div class="star-row"><span class="star-label">Task:</span> The requirement was fairly high level at first, just make chat possible without a transaction, and I had to work out all the concrete implications myself.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I made transactionId nullable end to end across the schema and every downstream read path, and then went through session listing, closing, reopening, and attachment lookups one at a time to find and fix every place that implicitly assumed a transaction existed, since a nullable column alone doesn't stop a join or a role lookup written against the old assumption from silently returning nothing. I also had to design new role resolution logic for these sessions, since the existing logic determined a user's role from the transaction itself, which no longer applied.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Enquiry sessions worked correctly across every existing chat feature without special casing scattered throughout the codebase, and it gave me a repeatable approach for these situations, systematically trace every consumer of an assumption before changing it, rather than just patching the entry point.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Land appraisals not fitting an existing schema</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> We needed to support land appraisals using the exact same appraisal and comp database tables that were originally designed for residential and commercial properties, even though land data has no ARV, no beds or baths, and no adjustment breakdown at all.</div>
+    <div class="star-row"><span class="star-label">Task:</span> There wasn't a clear spec for exactly how a poorly fitting data shape should map into an existing schema, so I had to make a judgment call.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I chose to reuse the existing tables rather than create a new schema just for land, mapping the fields that did exist, like as is value and lot size, and deliberately leaving the rest null, consistent with how the commercial engine already left some residential specific columns null. The alternative, a third schema, would have meant a third set of joins for every report or query that needed to work across all property types, for a property type that made up a small share of volume.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Land support shipped without a schema fork, keeping one consistent set of tables for all three property types, and it reinforced for me that when requirements are ambiguous about fit, it's worth explicitly documenting which columns are intentionally null and why, so it doesn't look like an oversight later.</div>
+  </div>

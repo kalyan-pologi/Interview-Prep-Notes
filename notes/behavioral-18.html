@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time you stepped into a leadership role.</h1>
+  <p>Behavioral question 18 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Leading a performance investigation end to end</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> When chat operations in UAT were taking 30 to 60 seconds, there wasn't an assigned lead for the investigation, it just needed someone to drive it to a real root cause instead of everyone independently guessing at possible fixes.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I took the lead on structuring the investigation, deciding what tooling to use and in what order, rather than just fixing the first slow looking query someone happened to notice.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I set up profiling with Hibernate SQL logging and ran EXPLAIN ANALYZE against realistic data volumes, categorized the redundant query patterns we found across message, attachment, session, and participant paths, and then worked through fixes systematically, combining writes, merging queries, reordering validation, verifying each change against the same profiling setup as I went rather than assuming a fix worked just because the code looked right.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The investigation brought the operation time down from 30 to 60 seconds to under 2 to 3 seconds, and having a clear, repeatable investigation process meant the fixes were verified with evidence at each step, not just assumed to have worked.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Owning a system end to end as its primary point of contact</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> I was the person who originally built the chat and notifications system from the ground up, the data model, the real time transport, and the domain logic, and over time I became the default person the team turned to for any production issue in that area.</div>
+    <div class="star-row"><span class="star-label">Task:</span> This meant taking ownership not just of new feature work, but of triaging and resolving production issues as they came in, prioritizing them appropriately against other planned work, and deciding when something needed an urgent fix versus a scheduled one.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I made the call early on to build things like idempotency keys and optimistic locking directly into the core design, anticipating classes of production issues, like a retried send request or two concurrent updates to the same session, rather than only reacting to them after they happened. When issues did come up, I owned diagnosing them fully rather than handing off half finished investigations.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The system became stable enough that production issues became infrequent relative to its complexity, and being the consistent owner meant fixes were made with full context of the original design decisions, rather than someone unfamiliar with the history having to reverse engineer intent each time.</div>
+  </div>

@@ -1,0 +1,50 @@
+<div class="section-header">
+  <div class="tag">DevOps</div>
+  <h1>📦 Minikube</h1>
+  <p>Minikube concepts and commands.</p>
+</div>
+
+<div class="note-body">
+  <h2>Cluster lifecycle</h2>
+  <pre><code>minikube start --driver=docker        # Start local K8s cluster using Docker
+minikube stop                         # Stop the cluster (keeps data)
+minikube delete                       # Delete the cluster completely (full reset)
+minikube status                       # Check cluster status
+minikube dashboard                    # Open Kubernetes Dashboard in browser</code></pre>
+
+  <h2>Addons</h2>
+  <pre><code>minikube addons list                  # List all available addons
+minikube addons enable ingress        # Enable NGINX Ingress controller
+minikube addons disable ingress       # Disable ingress
+minikube addons enable metrics-server # Enable resource metrics (for kubectl top)
+minikube addons enable dashboard      # Enable Kubernetes dashboard
+minikube addons disable dashboard     # Disable dashboard</code></pre>
+
+  <h2>Network & access</h2>
+  <pre><code>minikube ip                                  # Show cluster's internal IP address
+minikube service &lt;service&gt; -n &lt;ns&gt; --url    # Get external URL for a service
+minikube tunnel                              # Expose LoadBalancer/Ingress on localhost
+minikube ssh                                 # SSH into Minikube VM (Linux shell)
+minikube delete --all --purge                # Remove all profiles and cleanup</code></pre>
+
+  <h2>Docker inside Minikube</h2>
+  <pre><code>minikube docker-env                        # Show env vars to use Minikube's Docker daemon
+eval $(minikube -p minikube docker-env)    # (Linux/Mac) Use Minikube's Docker for builds
+minikube image build -t &lt;name&gt;:&lt;tag&gt; .    # Build image directly inside Minikube
+minikube image ls                          # List images inside Minikube
+minikube image rm &lt;image&gt;                  # Remove image from Minikube</code></pre>
+
+  <h2>Troubleshooting & info</h2>
+  <pre><code>minikube logs                         # View cluster logs
+minikube service list                 # List all exposed services
+minikube profile list                 # Show all Minikube profiles (clusters)
+minikube update-check                 # Check for updates
+minikube kubectl -- get pods          # Run kubectl command through Minikube</code></pre>
+
+  <h2>Typical local setup</h2>
+  <pre><code>minikube start --driver=docker
+minikube addons enable ingress
+kubectl apply -f k8s/
+minikube tunnel          # keep running
+kubectl get pods -n microservices</code></pre>
+</div>

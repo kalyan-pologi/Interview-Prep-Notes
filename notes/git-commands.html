@@ -1,0 +1,51 @@
+<div class="section-header">
+  <div class="tag">Tooling</div>
+  <h1>🔧 Git Commands</h1>
+  <p>Reference for common Git commands.</p>
+</div>
+
+<div class="note-body">
+  <h2>Setup & Config</h2>
+  <ul>
+    <li><code>git init</code>, initialize a new Git repository</li>
+    <li><code>git config</code>, configure Git settings (username, email, etc.)</li>
+    <li><code>git clone</code>, copy a remote repository locally</li>
+    <li><code>git remote</code>, manage remote connections</li>
+  </ul>
+
+  <h2>Day to Day</h2>
+  <ul>
+    <li><code>git status</code>, show current changes and staged files</li>
+    <li><code>git add</code>, stage files for commit</li>
+    <li><code>git commit</code>, save staged changes to the local repo</li>
+    <li><code>git push</code>, upload commits to the remote repo</li>
+    <li><code>git pull</code>, fetch and merge changes from remote</li>
+    <li><code>git fetch</code>, download changes without merging</li>
+  </ul>
+
+  <h2>Branching</h2>
+  <ul>
+    <li><code>git branch</code>, create or view branches</li>
+    <li><code>git checkout</code>, switch between branches</li>
+    <li><code>git merge</code>, merge another branch into the current one</li>
+    <li><code>git rebase</code>, reapply commits on top of another base branch</li>
+  </ul>
+
+  <h2>History & Undo</h2>
+  <ul>
+    <li><code>git log</code>, view commit history</li>
+    <li><code>git diff</code>, show differences between commits or files</li>
+    <li><code>git stash</code>, temporarily save uncommitted changes</li>
+    <li><code>git reset</code>, unstage or undo commits</li>
+    <li><code>git revert</code>, undo a commit by creating a new commit</li>
+    <li><code>git cherry-pick</code>, apply a specific commit from another branch</li>
+  </ul>
+
+  <h2>Notes from real usage</h2>
+  <p><code>git rebase</code> keeps history linear, which is nicer to read, but rewrites commit
+    hashes, so it should never be used on a shared branch someone else has already pulled.
+    <code>git merge</code> is safer for shared branches since it preserves history as-is with a
+    merge commit. <code>git revert</code> is the safe undo for anything already pushed since it
+    adds a new commit instead of rewriting history, while <code>git reset</code> is fine for local,
+    unpushed commits only.</p>
+</div>

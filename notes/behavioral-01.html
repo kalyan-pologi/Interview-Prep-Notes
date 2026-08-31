@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time you solved a difficult/challenging production bug. What did you learn?</h1>
+  <p>Behavioral question 1 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: A cache miss ends up racing to write the same row</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> We had a caching layer over a third party real estate API, making around 20 calls per report, fired in parallel using WebFlux. Occasionally two parallel calls hit the same cache key within milliseconds, since neighborhood data gets reused across properties, and both could pass a miss check before either had written anything.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Make sure two concurrent writes to the same key wouldn't produce a duplicate row or an unhandled exception that failed the whole report.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I considered a Redis distributed lock, but that adds latency to every write plus its own failure mode. I also considered a native insert-on-conflict-do-update, a single atomic round trip with no window for a second exception, but our repository went through Spring Data JPA without that dialect-specific query wired in yet. So I went with try save first: the cache key column had a unique constraint, the first request to commit inserts normally, and the second throws DataIntegrityViolationException, which Postgres enforces regardless of what either thread assumed. The gotcha was scoping that catch to its own transaction, since a failed insert and its retry sharing one transaction leaves it marked for rollback even after you catch the exception.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Intermittent exceptions under concurrent load stopped completely, with no distributed locking needed. A real database constraint can do the heavy lifting for concurrency safety, as long as the retry runs in a clean transaction and the integrity exception is treated as an expected signal, not a failure.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: PDF download returning 404 even though the file existed</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> On the appraisal side, users would click to view a previously generated PDF report and get a 404, even though we could see the file sitting in blob storage.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Find out why a URL that looked completely valid wasn't resolving, without guessing and touching the URL building code blindly.</div>
+    <div class="star-row"><span class="star-label">Action:</span> Instead of jumping straight into the code, I went into the storage console first and manually checked which storage account the blob actually lived in. It turned out the PDF was uploaded to one storage account, but the code that built the download URL was pointing at a different, similarly named storage account. Since we only ever persisted the blob filename and built the SAS URL at read time from config plus that filename, the actual bug surface was small once I confirmed the blob's real location, it was a one line configuration fix changing which account name the URL builder referenced, not any logic in the URL construction itself.</div>
+    <div class="star-row"><span class="star-label">Result:</span> PDFs started resolving correctly again. The bigger lesson was to verify the actual runtime state first, in this case the real location of the blob, before touching any code, since it's very easy to spend hours debugging URL construction logic when the real issue is a mismatched config value.</div>
+  </div>

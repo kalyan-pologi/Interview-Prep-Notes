@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time you missed a deadline or failed to deliver on time. What happened?</h1>
+  <p>Behavioral question 8 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Underestimating the complexity of reconciling two data shapes</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> I was asked to estimate how long it would take to build a shared caching schema that could serve both a residential and a commercial appraisal engine, and I initially estimated it as a fairly small task, since on paper it was just adding some database tables.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I had to actually deliver a schema that correctly served both engines despite their outputs being structurally different, one giving dollar adjustments, the other percentage adjustments.</div>
+    <div class="star-row"><span class="star-label">Action:</span> Once I got into it, I realized reconciling those two shapes properly, deciding which columns should stay null for which engine, and building a normalizer to convert percentages to dollars at write time, took significantly longer than the simple schema design I had estimated, since it wasn't just column mapping, it required tracing every downstream reader to confirm a null column wouldn't break a report. I missed my original estimate and had to go back to the team with a revised timeline once I understood the real scope.</div>
+    <div class="star-row"><span class="star-label">Result:</span> I delivered a working, correct solution, just later than my first estimate. Since then, when estimating anything that involves reconciling two systems that look similar on the surface but have real structural differences, I intentionally build in extra time for the reconciliation logic itself, not just the schema or endpoint work.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: A refactor took longer than planned because of an unexpected safety requirement</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> I was extracting the pure valuation logic out of a paid appraisal endpoint into a shared service, so both the paid flow and a new free cache flow could reuse it, and I initially scoped this as a straightforward extraction.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Partway through, it became clear the extraction needed to be provably behavior preserving, since the paid endpoint was billing relevant, so any subtle change in the response shape would be a real problem, not just a cosmetic one.</div>
+    <div class="star-row"><span class="star-label">Action:</span> That meant I had to slow down and write before and after comparison tests confirming the exact same request produced a byte for byte identical response before and after the refactor, which wasn't in my original time estimate, and I had to be careful the tests exercised the real Spring context rather than mocking the extracted service, since a mock would have hidden exactly the kind of subtle wiring bug I was trying to rule out. I communicated the delay clearly to the team rather than rushing it to hit the original date.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The extraction shipped a bit later than planned, but with confidence that the paid endpoint's behavior was completely unchanged. It reinforced that when a refactor touches anything billing related, verifying behavior preservation has to be part of the estimate from the start, not an afterthought.</div>
+  </div>

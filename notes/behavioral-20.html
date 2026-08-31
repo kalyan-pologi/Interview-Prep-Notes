@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time you communicated a technical risk to a non-technical stakeholder.</h1>
+  <p>Behavioral question 20 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Explaining why a cache miss must never be able to trigger a charge</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Product stakeholders wanted the free property browsing experience to feel fast and seamless, and at one point there was a suggestion to simplify the backend by letting the free cache path and the paid history path share more logic to reduce engineering time.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I needed to explain, in terms a non-technical stakeholder would find convincing, why sharing a write path between those two systems was a real risk, not just an engineering preference.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I framed it around the concrete failure scenario rather than technical architecture terms, if these two systems ever shared a write path and a bug slipped in, a customer browsing for free could end up accidentally charged, or worse, a paid customer's record could get silently overwritten by free traffic. I explained that keeping them in fully separate modules was a small amount of extra engineering effort that removed that entire risk category permanently, rather than just reducing the odds of it happening.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The stakeholder agreed the separation was worth keeping, and framing it around a specific dollars and trust scenario, rather than abstract code architecture, was what made the risk land clearly for a non-technical audience.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Explaining a data availability tradeoff around comp refresh timing</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A product stakeholder asked why comparable properties on an appraisal sometimes changed slightly between viewings of what seemed like the same cached report, and whether that indicated a bug.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I needed to explain that this was expected behavior from a caching design decision, not a defect, without getting into implementation details like delete and reinsert patterns.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I explained it in terms of the tradeoff, comps are refreshed as a full set whenever the underlying data becomes stale, rather than being locked in place forever, because comparable properties genuinely do change over time as new sales happen, and showing outdated comps would be worse than showing a slightly different but current set.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The stakeholder understood this was an intentional freshness versus stability tradeoff rather than a bug, and it also led to a good follow up conversation about whether we wanted to communicate a last updated timestamp to end users, which became a small follow up improvement.</div>
+  </div>

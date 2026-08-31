@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time you failed and what you learned from it.</h1>
+  <p>Behavioral question 2 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Missing a required field in a cache key design</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> While building the cache key for outbound API calls, I initially built the key using only the parameters I assumed were meaningful, like property id and endpoint type, and left out a couple of secondary parameters like a months of history limit that some endpoints also accepted.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Once we noticed some cached responses looked wrong for certain requests, I had to figure out what went wrong.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I traced it back to the cache key generator. Two requests that were actually asking for different data were producing the same cache key, because I hadn't included every parameter that reached the transport layer, just the ones I assumed mattered. A careless fix would have just special cased that one missing parameter, but that leaves the same class of bug waiting for the next endpoint with a parameter I hadn't thought of. Instead I rebuilt the key generator to derive the key from every normalized parameter that reached the get call programmatically, so adding a new query parameter to an endpoint automatically flows into the key without anyone remembering to update a hand picked list.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The collisions stopped completely. What I took away from that is that when you're building something like a cache key, you can't decide upfront which parameters matter and which don't. You have to include everything that affects the response, otherwise you end up with silent data correctness bugs that are much harder to catch than a crash.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Assuming automatic reconnect covered the initial connection too</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> While building a real time messaging feature on Spring Boot with STOMP, I initially assumed the client library's automatic reconnect logic would handle any connection failure, including the very first connection attempt.</div>
+    <div class="star-row"><span class="star-label">Task:</span> During testing, some users reported the chat panel just never connecting on a flaky network, with no retry happening at all.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I realized the built in automatic reconnect only kicks in after a connection has succeeded at least once, its retry loop is registered inside the STOMP connected callback, so it literally never runs if that callback never fires. If the very first handshake fails, there was nothing retrying it. I had to add a separate backoff and jitter based retry specifically for that initial connection attempt, with jitter so a network blip affecting many clients at once didn't cause a reconnect thundering herd against the same instance.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Connections became reliable even on a bad first attempt. The lesson was to not assume a library's retry behavior covers every failure mode, and to actually read through what triggers the retry versus what doesn't, instead of assuming the happy path logic applies everywhere.</div>
+  </div>

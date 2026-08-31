@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time you improved performance or code quality.</h1>
+  <p>Behavioral question 12 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Cutting redundant API calls to zero for repeat property lookups</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A reporting pipeline was making around 20 calls to a paid third party real estate API for every single report, even when the same property, or the same city and neighborhood data, had just been looked up recently.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I needed to reduce redundant calls without touching any of the roughly 20 call sites individually, since that would have been risky and hard to maintain.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I designed a caching layer as a decorator over the single shared transport interface all those calls funneled through, so wrapping that one method automatically covered all 20 endpoints. I split freshness checking into two independent gates, whether we had the right id to even call the endpoint, and whether the cached data was still fresh, since having a valid id said nothing about whether a specific field was stale, and collapsing those into one combined check would have meant a stale record with a valid id looking indistinguishable from a genuinely missing one.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Repeat lookups for fresh data dropped to zero external API calls, cutting cost and latency, while a single stale field only triggered a refetch for that one endpoint instead of the whole report recomputing from scratch.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Reworking transactional boundaries to eliminate a partial write risk</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> While working on a message send flow, the database write for the message and the write updating the parent session's last message timestamp were happening as two separate operations, which meant a failure between them could leave the data inconsistent.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I wanted to make sure a message and its parent session update either both succeeded or both failed together, without adding unnecessary overhead to a very frequently called code path.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I combined the message insert and the session update into one write within a single Transactional boundary, and used optimistic locking with Version on the session's last message timestamp so two concurrent updates couldn't silently overwrite each other, instead surfacing an OptimisticLockException that the caller could retry. I chose optimistic over pessimistic locking here since sends are frequent and short lived, a row lock held across the whole write would have serialized unrelated sends to the same session for no real benefit.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The send path became both faster, since it was fewer round trips, and safer, since a partial write could no longer happen, and it removed a subtle class of bug that could have caused sessions to show stale last message data under concurrent sends.</div>
+  </div>

@@ -1,0 +1,121 @@
+<div class="section-header">
+  <div class="tag">Design</div>
+  <h1>🧩 SOLID Principles & Design Patterns</h1>
+  <p>SOLID principles and design patterns used in real projects.</p>
+</div>
+
+<div class="note-body">
+  <h2>SOLID Principles</h2>
+  <p>Five principles for writing maintainable, extensible object oriented code. They come up
+    constantly in interviews because they are the vocabulary for explaining why a piece of code
+    is well designed or badly designed.</p>
+
+  <figure class="note-figure">
+    <img src="assets/img/solid-principles-diagram.png" alt="SOLID principles overview diagram">
+    <figcaption>SOLID principles overview</figcaption>
+  </figure>
+
+  <h3>Single Responsibility Principle (SRP)</h3>
+  <p>A class should have only one reason to change. In practice this means a service class does
+    one job, for example a <code>RiskScoringService</code> should score risk, not also send
+    notifications and not also handle persistence. When a class starts doing three unrelated
+    things, split it.</p>
+
+  <h3>Open/Closed Principle (OCP)</h3>
+  <p>A class should be open for extension but closed for modification. Instead of adding more
+    if-else branches to an existing method every time a new case shows up, you add a new
+    implementation of an interface. This is usually paired with the Strategy pattern, since new
+    strategies can be added without touching existing strategy classes.</p>
+
+  <h3>Liskov Substitution Principle (LSP)</h3>
+  <p>A subclass should be usable anywhere its parent class is expected, without breaking
+    behavior. If a subclass overrides a method and throws an exception the parent never threw,
+    or returns something that violates the parent's contract, that is an LSP violation, and it
+    usually means the inheritance relationship was wrong to begin with.</p>
+
+  <h3>Interface Segregation Principle (ISP)</h3>
+  <p>Clients should not be forced to depend on methods they do not use. Instead of one large
+    interface with ten methods where most implementers only need three, split it into smaller,
+    focused interfaces. This keeps implementing classes clean and avoids empty or
+    throw-not-supported method bodies.</p>
+
+  <h3>Dependency Inversion Principle (DIP)</h3>
+  <p>High level modules should depend on abstractions, not concrete implementations. A service
+    class should depend on a <code>RiskScoringStrategy</code> interface, not on a specific
+    concrete scoring class. Spring's dependency injection is basically DIP built into the
+    framework, since beans are wired by interface type and the concrete implementation can be
+    swapped without touching the consumer.</p>
+
+  <h2>Design Patterns Used in Real Projects</h2>
+  <p>Below are the patterns that come up the most often when explaining real project decisions,
+    with the actual scenario they solved.</p>
+
+  <h3>Strategy Pattern</h3>
+  <p>Used to select an algorithm at runtime based on some condition, instead of branching with
+    if-else. On one project I had risk scoring logic where the scoring algorithm depended on the
+    applicant's credit tier. I defined a <code>RiskScoringStrategy</code> interface with three
+    implementations, one per tier, each a Spring <code>@Component</code> so it gets picked up by
+    component scanning automatically. This satisfies both OCP (new tiers just mean a new
+    implementation class) and DIP (the service depends on the interface).</p>
+
+  <h3>Factory Pattern</h3>
+  <p>Used to centralize object creation logic so callers do not need to know which concrete class
+    to instantiate. Paired with the strategy example above, a factory class reads the applicant's
+    credit profile, classifies it into a risk category, and returns the matching strategy
+    implementation. This kept the classification logic in exactly one place instead of scattered
+    across every caller.</p>
+
+  <h3>Singleton Pattern</h3>
+  <p>Ensures only one instance of a class exists. Spring beans are singleton scoped by default,
+    so this pattern is mostly handled by the framework rather than written by hand. The one time
+    it matters explicitly is remembering that a singleton bean must be stateless, meaning no
+    mutable instance fields that hold per-request data, since the same instance is shared across
+    every concurrent request. Request-specific data goes into method parameters or local
+    variables, never instance fields.</p>
+
+  <h3>Builder Pattern</h3>
+  <p>Used for constructing objects that have many optional fields, so you avoid a constructor
+    with eight parameters where it is easy to mix up the order. Common on DTOs and request
+    objects in a Spring Boot service, especially with Lombok's <code>@Builder</code> generating
+    the boilerplate.</p>
+
+  <h3>Observer Pattern</h3>
+  <p>Defines a one-to-many dependency so that when one object changes state, dependents get
+    notified. Spring's <code>ApplicationEventPublisher</code> and <code>@EventListener</code> are
+    a built-in implementation of this. I used it to decouple a core write operation from
+    secondary side effects, for example publishing an event after a status update instead of
+    calling the notification logic directly inline, so the core transaction does not need to know
+    who is listening.</p>
+
+  <h2>Concurrency Related Patterns</h2>
+  <p>These come up more in system design and multithreading discussions than in day to day Spring
+    Boot work, but they are worth knowing by name since they explain the reasoning behind
+    higher-level abstractions like <code>ExecutorService</code> and
+    <code>CompletableFuture</code>.</p>
+
+  <ul>
+    <li><b>Producer-Consumer</b>, producer threads generate data, consumer threads process it, a
+      shared queue decouples the two. Basis for message queue based processing.</li>
+    <li><b>Thread Pool</b>, reuses a fixed set of worker threads instead of creating and
+      destroying threads per task, avoiding thread creation overhead. This is what
+      <code>ExecutorService</code> gives you.</li>
+    <li><b>Futures and Promises</b>, represents the result of an async operation that is not
+      available yet. Java's <code>Future</code> and <code>CompletableFuture</code> are direct
+      implementations.</li>
+    <li><b>Monitor Object</b>, synchronizes access to shared state so only one thread executes a
+      critical section at a time, preventing race conditions. This is essentially what
+      <code>synchronized</code> blocks give you.</li>
+    <li><b>Read-Write Lock</b>, allows many concurrent readers but only one writer at a time,
+      useful when reads vastly outnumber writes on a shared resource.</li>
+  </ul>
+
+  <figure class="note-figure">
+    <img src="assets/img/essential-design-patterns-overview-diagram.png" alt="Essential design patterns overview diagram">
+    <figcaption>Essential design patterns overview</figcaption>
+  </figure>
+
+  <figure class="note-figure">
+    <img src="assets/img/design-patterns-junior-middle-senior-cheatsheet.png" alt="Design patterns cheat sheet by experience level">
+    <figcaption>Design patterns cheat sheet</figcaption>
+  </figure>
+</div>

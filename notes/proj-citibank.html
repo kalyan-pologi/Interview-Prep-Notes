@@ -1,0 +1,75 @@
+<div class="section-header">
+  <div class="tag">Project</div>
+  <h1>🏦 Citibank: Digital Banking & Risk Infrastructure Modernization</h1>
+  <p>Role: Java Developer · Domain: Retail & Consumer Banking, Payments, Risk, and Fraud Analytics</p>
+</div>
+
+<div class="note-body">
+  <p>Customers expected an instant loan decision, but the existing process took hours and was
+    causing significant drop-offs. We rebuilt this as an event-driven system in Java, Spring Boot,
+    and Kafka, where fraud scoring and credit risk assessment run in parallel instead of one
+    waiting on the other, bringing the end-to-end decision time down to seconds. I worked across
+    the full backend: the application submission APIs, the scoring pipeline, the decision engine,
+    and integrations with external credit bureau APIs.</p>
+
+  <figure class="note-figure">
+    <img src="assets/img/citibank-kafka-fraud-credit-risk-architecture-diagram.png" alt="Citibank Kafka fraud and credit risk architecture diagram">
+    <figcaption>Fraud and credit risk architecture</figcaption>
+  </figure>
+
+  <h2>Flow</h2>
+  <p>When a user submits a loan or credit card application, the request goes through an API
+    Gateway for authentication and routing, then to the Application Service (Spring Boot). This
+    service validates the input, performs an idempotency check to avoid duplicate processing,
+    stores the application in PostgreSQL, and publishes an <code>application.submitted</code>
+    event to Kafka. From here the system shifts from synchronous request handling to asynchronous,
+    event-driven processing.</p>
+  <p>The event is partitioned by <code>applicationId</code> to guarantee ordering per application
+    and allow horizontal scaling. Two independent consumer groups, Fraud Service and Credit Risk
+    Service, consume the event in parallel, which is critical to meeting a sub-3-second SLA.</p>
+  <p>The Fraud Service calls external dependencies synchronously, Device Intelligence, an internal
+    blacklist, and a fraud ML model, all wrapped in circuit breakers, retry policies, and rate
+    limiting to prevent cascading failures. Hot behavioral features are cached in Redis for fast
+    access, and the computed fraud score is persisted in PostgreSQL before publishing a
+    <code>fraud.result</code> event.</p>
+  <p>The Credit Risk Service consumes the same <code>application.submitted</code> event, calls the
+    Credit Bureau API, a customer profile service, and a credit risk ML model, also behind
+    resilience patterns, computes metrics like debt-to-income and probability of default, and
+    publishes a <code>credit.risk.result</code> event.</p>
+  <p>The Decision Service is the aggregation layer. It consumes both result events, correlates them
+    by <code>applicationId</code>, holds temporary state in Redis, and applies a short time window,
+    for example 2.5 seconds inside the overall 3-second SLA, to wait for both results. If the fraud
+    score comes back high risk, it short-circuits and rejects immediately without waiting on credit
+    risk. If only one result arrives within the window, the case routes to manual review and a
+    <code>decision.timeout</code> event is published. Once a final decision is made, it is stored in
+    the audit database, a <code>final.decision</code> event is published, and the Application
+    Service updates the application status.</p>
+  <p>For manual review, the Decision Service sends a message to a review queue that business
+    analysts or compliance officers work through in a support portal. Their decision generates a
+    <code>manual.decision.completed</code> event that finalizes the application state.</p>
+  <p>Observability and regulatory reporting systems consume the same Kafka events asynchronously
+    and outside the real-time decision path, so audit logging and compliance reporting never affect
+    the SLA.</p>
+
+  <h2>Design Reasoning</h2>
+  <p>The core idea is combining synchronous calls where a result is needed immediately, the ML and
+    bureau calls, with asynchronous Kafka messaging for everything between services. Fraud and
+    credit risk run independently and in parallel rather than sequentially, the Decision Service
+    owns correlation and short time-boxed state, resilience patterns prevent one failing dependency
+    from cascading into the whole pipeline, and manual review is the human-in-the-loop fallback when
+    the system cannot decide confidently within the SLA.</p>
+
+  <h2>Joining Mid-Development</h2>
+  <p>I joined this project after the core application submission and Kafka pipeline had already
+    been partially built by a developer who had since moved to a different team, with limited
+    documentation. The Decision Service in particular, the most critical piece since it correlates
+    fraud and credit results into the final loan decision, had no handover and no comments
+    explaining the reasoning behind its design. Getting productive quickly meant reading the Kafka
+    topic contracts and tracing actual message flow through logs rather than relying on
+    documentation that did not exist, then writing my own notes as I went so the next person would
+    not be stuck the same way.</p>
+
+  <p>Detailed metrics and configuration tables for this system's Kafka cluster, database, caching,
+    threading, deployment, reliability, and observability setup are in
+    <a href="#spring-topics">Spring Framework Topics</a> under Real-World Architecture Reference.</p>
+</div>

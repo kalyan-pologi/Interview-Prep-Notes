@@ -1,0 +1,120 @@
+<div class="section-header">
+  <div class="tag">Tooling</div>
+  <h1>✅ JUnit Core Concepts</h1>
+  <p>Definitions and use cases for JUnit testing.</p>
+</div>
+
+<div class="note-body">
+  <h2>Test Methods & Assertions</h2>
+  <p>A test method is annotated with <code>@Test</code> and contains the logic and assertions that
+    verify expected behavior, for example
+    <code>@Test void testAdd() { assertEquals(5, calculator.add(2, 3)); }</code>. Common
+    assertions:</p>
+  <ul>
+    <li><code>assertEquals(expected, actual)</code>, compare values</li>
+    <li><code>assertTrue(condition)</code> / <code>assertFalse(condition)</code>, boolean checks</li>
+    <li><code>assertNull(object)</code> / <code>assertNotNull(object)</code>, null checks</li>
+    <li><code>assertThrows(Exception.class, () -> method())</code>, exception testing</li>
+  </ul>
+
+  <h2>Test Lifecycle</h2>
+  <p>Annotations controlling when setup and cleanup run:</p>
+  <ul>
+    <li><code>@BeforeEach</code>, runs before each test</li>
+    <li><code>@AfterEach</code>, runs after each test</li>
+    <li><code>@BeforeAll</code>, runs once before all tests, must be static</li>
+    <li><code>@AfterAll</code>, runs once after all tests, must be static</li>
+  </ul>
+  <p>Common pattern: <code>@BeforeEach void setup() { db.createTables(); }</code> paired with
+    <code>@AfterEach void cleanup() { db.clearData(); }</code> to keep tests isolated from each
+    other.</p>
+
+  <h2>Parameterized Tests</h2>
+  <p>Runs the same test logic against different input values using
+    <code>@ParameterizedTest</code>, avoiding copy-pasted near-duplicate test methods:</p>
+  <ul>
+    <li><code>@ValueSource(ints = {1, 2, 3, 4})</code>, multiple simple inputs</li>
+    <li><code>@CsvSource({"1,1,2", "2,3,5"})</code>, CSV-style multi-argument inputs</li>
+    <li><code>@MethodSource("testData")</code>, pulls test data from a method</li>
+  </ul>
+  <pre><code>@ParameterizedTest
+@ValueSource(strings = {"test@email.com", "user@domain.org"})
+void testValidEmails(String email) {
+    assertTrue(validator.isValid(email));
+}</code></pre>
+
+  <h2>Mocking with Mockito</h2>
+  <p>Mockito creates mock objects to isolate the unit under test from its dependencies.</p>
+  <ul>
+    <li><code>@Mock</code>, creates a mock object</li>
+    <li><code>@InjectMocks</code>, injects the mocks into the class under test</li>
+  </ul>
+  <pre><code>@Mock PaymentService paymentService;
+@InjectMocks OrderService orderService;
+
+when(paymentService.process(any())).thenReturn(true);
+verify(emailService).send("test@email.com");</code></pre>
+
+  <h2>Test Organization</h2>
+  <ul>
+    <li><code>@Tag("unit")</code>, <code>@Tag("integration")</code>, tag tests for selective runs</li>
+    <li><code>@Suite</code> + <code>@SelectClasses({Test1.class, Test2.class})</code>, group into suites</li>
+    <li><code>@SelectPackages("com.example.tests")</code>, select by package</li>
+  </ul>
+
+  <h2>Exception Testing</h2>
+  <pre><code>assertThrows(IllegalArgumentException.class, () -> divide(5, 0));
+assertThrows(UnauthorizedException.class, () -> deleteUser());</code></pre>
+
+  <h2>Integration Testing</h2>
+  <p>Beyond isolated unit tests, Spring Boot provides slice tests for testing component
+    interaction with real infrastructure:</p>
+  <ul>
+    <li><code>@DataJpaTest</code>, tests the repository/database layer only</li>
+    <li><code>@WebMvcTest</code>, tests the web/controller layer only, with mocked service beans</li>
+    <li><code>@SpringBootTest</code>, loads the full application context</li>
+  </ul>
+
+  <h2>Performance Testing</h2>
+  <p><code>@Timeout(value = 5, unit = TimeUnit.SECONDS)</code> fails a test if it takes longer than
+    the given duration, useful for catching accidental performance regressions or hangs.</p>
+
+  <h2>Quick Reference</h2>
+  <pre><code>class UserServiceTest {
+    @BeforeEach
+    void setUp() { /* setup */ }
+
+    @Test
+    void shouldCreateUser() {
+        // Given
+        String name = "John";
+        // When
+        User user = userService.create(name);
+        // Then
+        assertNotNull(user);
+        assertEquals(name, user.getName());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"", " ", "null"})
+    void shouldRejectInvalidNames(String invalidName) {
+        assertThrows(IllegalArgumentException.class,
+            () -> userService.create(invalidName));
+    }
+}</code></pre>
+
+  <p>Maven / Gradle test commands:</p>
+  <pre><code># Maven
+mvn test                    # Run all tests
+mvn test -Dtest=UserTest    # Run specific test
+mvn test -Dgroups=unit      # Run tagged tests
+
+# Gradle
+./gradlew test                 # Run all tests
+./gradlew test --tests UserTest # Run specific test</code></pre>
+
+  <figure class="note-figure">
+    <img src="assets/img/junit-mockito-annotations-cheat-sheet.png" alt="JUnit and Mockito annotations cheat sheet">
+    <figcaption>JUnit & Mockito annotations cheat sheet</figcaption>
+  </figure>
+</div>

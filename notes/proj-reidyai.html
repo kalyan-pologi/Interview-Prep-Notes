@@ -1,0 +1,99 @@
+<div class="section-header">
+  <div class="tag">Project</div>
+  <h1>🏗️ ReidyAI</h1>
+  <p>Combined write-up covering Reidy, CashFlowMW, and ReidyAI.</p>
+</div>
+
+<div class="note-body">
+  <p>Reidy is a real estate platform connecting brokers, lenders, transaction coordinators, and
+    buyers around property deals and property data, everything from tracking a transaction end to
+    end, to real time communication between the parties involved, to automatically generating
+    property appraisals and investment analysis reports. A lot of what I built touches paid
+    transactions and production data other teams rely on, so reliability and data correctness has
+    been a constant theme across the work.</p>
+
+  <h2>Appraisal Engines (Residential, Commercial, Land)</h2>
+  <p>The core of the platform is a set of appraisal services that value a property automatically
+    from an address. The residential engine reads property and MLS data from parquet datasets on
+    Azure Data Lake, builds a pool of comparable properties using geographic and feature
+    filtering, then runs a KNN-based comp selection with per-feature dollar adjustments (beds,
+    baths, pool, garage, fireplace, gross area, year built, condition). The selected comps are
+    split into an As-Is group and an ARV group, then combined with an inverse-distance-weighted
+    valuation, falling back to an unweighted mean when there is not enough spread in the data. A
+    rehab cost range is derived from reconstruction cost and a condition-based fraction with a
+    plus/minus band. The commercial engine works differently since it is backed by Azure SQL
+    rather than parquet, and runs a multi-agent pipeline where separate agents produce the sales,
+    cost, and income approaches, and a reconciliation agent combines them with weighted approach
+    scores.</p>
+
+  <h2>Appraisal History vs. Property Cache</h2>
+  <p>One of the more interesting problems I worked on was that an appraisal can get saved to
+    storage in two structurally different ways. One path is a user paying to generate a formal
+    appraisal, which goes into a permanent, append-only audit history table and triggers a
+    charge. The other is a property simply being browsed on a details page, which should return a
+    free, reusable cached estimate instead of regenerating the valuation and charging every time.
+    These two paths absolutely cannot share a write path, because a cache miss accidentally
+    triggering a paid history write, or the reverse, would double charge someone or corrupt the
+    audit trail. I helped design the branch point so the decision of which path to use is always
+    made upfront, by looking up whether the property already exists in our database, rather than
+    ever being inferred from payment state or request shape. I also kept the cache write path in
+    its own top-level package, physically separate from the history write path's code, specifically
+    so the rule is enforced by folder boundary and not just convention, since convention is easy
+    to accidentally violate under deadline pressure.</p>
+
+  <h2>Caching Layer Over a Third-Party Real Estate API</h2>
+  <p>Generating an investment analysis report calls a third party real estate data API around
+    twenty times, fired in parallel with WebFlux to keep latency down. I built a caching layer in
+    front of those calls to cut down on external API cost and latency. Early on I hit a real
+    concurrency bug: two parallel calls could hit the same cache key within milliseconds, since
+    neighborhood-level data gets reused across nearby properties, and both requests could pass a
+    cache-miss check before either had actually written its result. I fixed that by relying on a
+    database-level unique constraint on the cache key and treating the resulting constraint
+    violation as an expected outcome, catching it and reading back the row the other request just
+    wrote, instead of trying to prevent the race with an in-memory lock that would not hold up
+    across multiple instances.</p>
+  <p>A related bug came from the cache key design itself. I initially built the key from the
+    parameters I assumed were meaningful, like property id and endpoint type, and left out a
+    couple of secondary parameters some endpoints also accepted, like a months-of-history limit.
+    Once cached responses started looking wrong for certain requests, I traced it back to two
+    different requests colliding on the same key despite asking for different data. The fix was to
+    include every parameter that affects the response in the key, not just the ones that seemed
+    important upfront. It reinforced that with caching, you cannot decide in advance which inputs
+    matter, you have to be exhaustive, otherwise you get silent data correctness bugs that are much
+    harder to catch than a crash.</p>
+
+  <h2>Shared Database, Separate Ownership</h2>
+  <p>The cache tables needed to live inside a database that was already shared with another
+    application team's production tables. There was a suggestion early on to just run the DDL
+    manually against production to move faster. I pushed back on that and instead wired the new
+    tables into the existing migration process, applied automatically at service startup with an
+    idempotent guard so a rerun is a fast no-op. It cost a bit more setup time upfront but meant
+    the schema stayed reproducible across dev, UAT, and prod, and nobody could accidentally drift
+    production out of sync with what was in source control.</p>
+
+  <h2>Config-Gated Infrastructure</h2>
+  <p>The cache feature was built to be optional, controlled by a config flag, so it could be
+    turned off cleanly if needed. I initially assumed that made the application resilient to the
+    cache database being unreachable, but the flag only gated behavior, not bean creation, so the
+    cache DataSource was still being instantiated eagerly on startup and would fail the whole
+    application if the connection string was bad, even with the feature flag off. I fixed this
+    using <code>@ConditionalOnProperty</code> so the DataSource bean itself is only created when
+    the flag is true, which meant turning the flag off genuinely removes the dependency instead of
+    just not calling it. It was a good reminder to think about failure of infrastructure you own,
+    not just failure of systems you call into.</p>
+
+  <h2>DuckDB Memory Tuning</h2>
+  <p>Part of the data pipeline uses DuckDB for fast local analytical queries over parquet data.
+    Under production load we started seeing memory pressure and instability, so I worked on
+    tuning DuckDB's memory limit configuration and adding logging around query execution to
+    understand actual memory usage patterns before and after tuning, rather than guessing at a
+    number. This kept the service stable without over-provisioning memory that would otherwise sit
+    idle most of the time.</p>
+
+  <h2>CashFlowMW</h2>
+  <p>CashFlowMW is a related service focused on cash flow and investment analysis for real estate
+    deals, sharing infrastructure patterns with the main Reidy platform, including the same
+    emphasis on getting cached, third-party-sourced financial data right and consistent across
+    requests. Work here overlapped heavily with the caching and data correctness themes above,
+    since the investment analysis reports pull from the same categories of external data sources.</p>
+</div>

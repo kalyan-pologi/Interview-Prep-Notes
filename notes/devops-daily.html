@@ -1,0 +1,95 @@
+<div class="section-header">
+  <div class="tag">DevOps</div>
+  <h1>📅 Daily DevOps Commands</h1>
+  <p>Docker + Kubernetes + Minikube daily commands.</p>
+</div>
+
+<div class="note-body">
+  <h2>Docker (local environment)</h2>
+  <pre><code># Start all microservices (Config Server, Eureka, Gateway, DBs, etc.)
+docker-compose up -d
+
+# Stop all running containers and remove network
+docker-compose down
+
+# Check running containers and their ports
+docker ps
+
+# View logs for a specific service
+docker logs -f user-service</code></pre>
+
+  <h2>Kubernetes (Minikube)</h2>
+  <pre><code># Start Minikube cluster (runs Kubernetes inside Docker)
+minikube start --driver=docker
+
+# Enable NGINX Ingress Controller (only run once)
+minikube addons enable ingress
+
+# Start Minikube tunnel (keep this terminal open)
+# Makes ingress routes like user.local, gateway.local accessible
+minikube tunnel</code></pre>
+
+  <h2>Deploy microservices to Kubernetes</h2>
+  <pre><code># Deploy all YAML manifests from the k8s folder
+kubectl apply -f k8s/
+
+# Check all running pods in the microservices namespace
+kubectl get pods -n microservices
+
+# Check all services (exposed ports & ClusterIP)
+kubectl get svc -n microservices
+
+# View logs for a specific deployment
+kubectl logs deployment/user-service -n microservices --tail=50
+
+# Restart a specific microservice after a code/config update
+kubectl rollout restart deployment user-service -n microservices
+
+# Delete all deployments and services defined in the k8s folder
+kubectl delete -f k8s/
+
+# Stop the Minikube cluster (keeps images & state)
+minikube stop
+
+# Delete Minikube cluster completely (fresh setup)
+minikube delete</code></pre>
+
+  <h2>Rebuilding & redeploying a changed microservice</h2>
+  <pre><code># Point Docker CLI to Minikube's internal Docker daemon
+# so images build inside Minikube for Kubernetes to use
+minikube -p minikube docker-env | Invoke-Expression
+
+# Build the Docker image for the updated service
+docker build -t user-service:latest ./userService
+
+# Restart only that service in the cluster to apply the new image
+kubectl rollout restart deployment user-service -n microservices</code></pre>
+
+  <h2>Health checks & debugging</h2>
+  <pre><code># Detailed pod information for debugging
+kubectl describe pod &lt;pod-name&gt; -n microservices
+
+# Verify ingress rules and host mappings
+kubectl get ingress -n microservices
+
+# Check current Minikube IP (for /etc/hosts)
+minikube ip</code></pre>
+
+  <h2>Optional utility commands</h2>
+  <pre><code># Save logs from all services to a local file
+kubectl logs -l app=user-service -n microservices &gt; user-service.log
+
+# List all images currently stored inside Minikube
+minikube ssh "docker images"
+
+# Remove dangling or old Docker images
+docker system prune -f
+
+# Verify everything is running fine
+kubectl get all -n microservices</code></pre>
+
+  <h2>Summary</h2>
+  <p>Use Docker commands when developing locally for fast feedback. Use Kubernetes (Minikube)
+    commands when testing the full distributed setup. Run <code>minikube tunnel</code> and check
+    ingress hosts. After a code change, rebuild the image, then restart the deployment.</p>
+</div>

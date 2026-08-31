@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time you had to balance quality with delivery speed.</h1>
+  <p>Behavioral question 15 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Choosing a full replace instead of a diffing approach for comps</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Every time an appraisal was refreshed, the list of comparable properties needed to be updated in the database, and there was a question of whether to write logic that diffs the old and new comp lists, updating only what changed, or just delete everything and reinsert the new set.</div>
+    <div class="star-row"><span class="star-label">Task:</span> A diffing approach would have been more precise, but comps have no stable natural key across refreshes, since the set can shrink, grow, or reorder entirely between runs.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I chose to delete and reinsert the full set of comps on every refresh instead of building diffing logic, since comp counts are small, typically single digits to low tens, so the performance cost of a full replace was negligible, and it avoided a whole category of key matching bugs a diffing approach would have introduced, like accidentally matching two unrelated comps that happened to share an address after a resale. I relied on the FK's ON DELETE CASCADE from the parent appraisal row so a delete-then-reinsert inside one transaction couldn't leave orphaned comp rows behind.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The comp refresh logic stayed simple and correct, and in hindsight, building a more precise diffing system would have added real complexity for essentially no benefit given how small these datasets are.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Keeping the response contract byte for byte identical during a refactor, even though it added test writing time</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> I was extracting the core valuation logic out of a paid appraisal endpoint so it could be shared with a new free caching endpoint, and the fast path would have been to just refactor it and trust that I hadn't changed the output.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Since the endpoint was billing relevant, I felt I couldn't just trust that the refactor was safe, I needed to actually prove it.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I wrote before and after comparison tests that captured the exact same request against the old and new code paths and asserted the responses matched byte for byte, which took extra time upfront, time that wasn't in the initial estimate, and I made sure those tests ran against the real Spring context rather than a mocked service so the comparison actually exercised the wiring, not just the extracted method in isolation.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The refactor shipped with real confidence that a billing relevant endpoint's behavior was completely unchanged, and that extra time spent on comparison tests felt clearly worth it, since a subtle regression there would have been a much more expensive problem to catch after the fact.</div>
+  </div>

@@ -1,0 +1,36 @@
+<div class="section-header">
+  <div class="tag">Project</div>
+  <h1>🏥 Fortis Medical: Hospital Management System</h1>
+  <p>Role: Java Developer · Domain: Healthcare, Hospital Management System (HMS)</p>
+</div>
+
+<div class="note-body">
+  <p>Worked on a team transforming unstructured clinical data into structured formats for
+    downstream analytics and research, patient procedures, diagnoses, medications, lab results,
+    and demographics, data that was often messy and inconsistent across sources. My main
+    responsibility was building scalable pipelines to process and clean this data efficiently and
+    accurately.</p>
+
+  <h2>Pipeline Architecture</h2>
+  <p>We used Spring and Spring Boot to build modular backend services for each stage of the
+    transformation process. For large-scale processing we used Apache Spark to handle billions of
+    records efficiently. The pipelines integrated live data from trusted sources like FDA
+    databases, mapping it against patient records to enrich the dataset.</p>
+
+  <h2>Feedback-Driven Release Validation</h2>
+  <p>A core part of the workflow was a monthly structured data release. I helped build an internal
+    tool clinical scientists used to validate the most critical sections of each release, with
+    their feedback submitted directly in the tool and processed through a Kafka-based feedback
+    loop that automatically flagged and corrected data issues. Feedback was stored and versioned to
+    improve the next cycle, with alerts set up to catch pipeline failures quickly.</p>
+
+  <h2>Release Comparison Tool</h2>
+  <p>To ensure release quality I built a Streamlit-powered data validation platform comparing the
+    current and previous releases, highlighting regressions and improvements in structured output
+    and helping the team make confident go or no-go decisions before a release shipped. It was
+    built with Java, MySQL, and MongoDB and became a standard part of the monthly release
+    process.</p>
+
+  <p>My work focused heavily on procedures, diagnoses, and demographic data, with an emphasis on
+    data quality, automation, and feedback-driven improvement over time.</p>
+</div>

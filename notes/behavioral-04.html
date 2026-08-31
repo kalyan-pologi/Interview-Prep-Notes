@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time you had a disagreement with your manager or a technical decision.</h1>
+  <p>Behavioral question 4 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Choosing to migrate infrastructure instead of patching around it repeatedly</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> We had an intermittent issue in production with our real time messaging service, where under multi instance load, a connection would succeed and then the very next request from that same client would come back as a failure. The initial instinct on the team was to keep patching around it, for example tuning sticky session settings again.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I had already traced the actual root cause, which was that the sticky session mechanism we relied on to keep a client pinned to the right instance wasn't surviving a hop through our content delivery layer.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I pushed back on the idea of another sticky session tuning pass, since that only reduces the odds of hitting the wrong instance, it doesn't eliminate the mismatch, so the failure would keep resurfacing under enough load. Instead I proposed migrating the underlying transport onto a managed relay service that didn't depend on sticky sessions at all, since a relay that pubs messages across instances removes the requirement for a client to stay pinned to one node in the first place. That was a bigger, less familiar change, so it took some convincing, since it meant touching infrastructure instead of just application code.</div>
+    <div class="star-row"><span class="star-label">Result:</span> We went with the migration, and the intermittent failures disappeared completely, instead of just becoming rarer. It reinforced for me that when you've actually root caused something, it's worth advocating for the structural fix even if it's a harder sell than another quick patch.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Disagreeing on whether to touch a shared database directly for a quick fix</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> While building the caching layer, the cache tables needed to live inside a database that was already shared with another application team's production tables. There was a suggestion to just run DDL manually against production to get moving faster.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I felt strongly that manual DDL against a shared production database was too risky, even for a schema that was technically isolated to its own tables.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I proposed using Flyway migrations scoped specifically to our schema, with its own separate migration history table, so the tooling itself enforced a boundary instead of relying on people being careful, and so every environment applies the exact same versioned scripts in the exact same order instead of drifting from whatever someone typed by hand once. I also insisted on a baseline migration that explicitly created the schema first with an if-not-exists guard, since we later did hit a bug where a genuinely fresh database failed because the schema didn't exist yet.</div>
+    <div class="star-row"><span class="star-label">Result:</span> We went with the Flyway approach, and it actually caught that fresh database bug for us in a controlled way, in a test environment, rather than surprising us in production. It confirmed my instinct that upfront discipline around migrations is worth the small extra setup time on a shared database.</div>
+  </div>

@@ -1,0 +1,40 @@
+<div class="section-header">
+  <div class="tag">Project</div>
+  <h1>🏢 Accenture: MyHub Platform Modernization (Intuit Client)</h1>
+  <p>Role: Java Full Stack Engineer · Domain: Internal Business Systems</p>
+</div>
+
+<div class="note-body">
+  <p>Large-scale modernization of the client's internal application, used by over 100,000
+    employees. The original system was outdated, slow, and difficult to maintain, causing
+    performance issues especially during high-traffic periods. Alongside the modernization, the
+    client wanted a new centralized platform called MyHub that would consolidate employee
+    services, leave balances, training, timesheets, payroll, and workspace reservations, into a
+    single portal, since these had previously been scattered across separate applications and were
+    inefficient for employees to navigate.</p>
+
+  <h2>Migration and Infrastructure</h2>
+  <p>We migrated the system from a monolithic architecture to microservices using Java and Spring
+    Boot, which significantly improved maintainability and performance. I also optimized the
+    PostgreSQL database, improving query speed and data retrieval times. Since the system needed to
+    handle a high volume of users efficiently, we used AWS, EC2 for compute, S3 for storage, and
+    Lambda for background tasks. Docker and Kubernetes containerized and managed the microservices,
+    improving scalability and reducing system downtime by about 15 percent. Apache Kafka and
+    RabbitMQ handled messaging between services for smoother inter-service communication.</p>
+
+  <h2>Reporting Hierarchy Service</h2>
+  <p>I worked on a Reporting Hierarchy microservice that manages the organizational structure,
+    tracking who reports to whom. It was built with PostgreSQL and GraphQL to store and query
+    hierarchical data efficiently, letting employees quickly look up their reporting chain and
+    letting managers view their direct reports without the slow, denormalized queries the old
+    system relied on.</p>
+
+  <p>Overall the project meaningfully improved system performance, maintainability, and the
+    day-to-day employee experience, consolidating scattered internal tools into one place while
+    keeping the platform responsive under high traffic.</p>
+
+  <figure class="note-figure">
+    <img src="assets/img/aws-services-for-spring-boot-table.png" alt="AWS services commonly used with Spring Boot table">
+    <figcaption>AWS services used alongside Spring Boot</figcaption>
+  </figure>
+</div>

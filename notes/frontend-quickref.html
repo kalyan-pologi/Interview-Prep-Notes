@@ -1,0 +1,80 @@
+<div class="section-header">
+  <div class="tag">Frontend</div>
+  <h1>⚡ Quick Revision Guide</h1>
+  <p>Frontend quick revision guide.</p>
+</div>
+
+<div class="note-body">
+  <p>Condensed cross-topic cheat sheet, a fast pass over everything in the Frontend section before
+    an interview. See the individual pages for full explanations and examples.</p>
+
+  <h2>CSS</h2>
+  <ul>
+    <li>Box model order: content, padding, border, margin</li>
+    <li>Flexbox is one-dimensional (row or column), Grid is two-dimensional</li>
+    <li>Positioning: static (default) &lt; relative (offset, space preserved) &lt; absolute (out
+      of flow, relative to nearest positioned ancestor) &lt; fixed (relative to viewport) &lt;
+      sticky (relative until a scroll threshold, then fixed)</li>
+    <li>Units: <code>px</code> fixed, <code>%</code> relative to parent, <code>em</code> relative
+      to parent font size, <code>rem</code> relative to root font size</li>
+  </ul>
+
+  <h2>JavaScript</h2>
+  <ul>
+    <li><code>let</code>/<code>const</code> are block scoped, <code>var</code> is function
+      scoped</li>
+    <li>Hoisting: <code>var</code> hoists as <code>undefined</code>, <code>let</code>/<code>const</code>
+      hoist into a temporal dead zone</li>
+    <li>Closures let an inner function remember its outer scope's variables after that scope
+      returns</li>
+    <li>Prototype chain: a missing property lookup walks up the prototype chain before failing</li>
+    <li>Promises and async/await replace nested callback hell</li>
+    <li><code>localStorage</code> persists across sessions, <code>sessionStorage</code> clears
+      when the tab closes</li>
+  </ul>
+
+  <h2>TypeScript</h2>
+  <ul>
+    <li><code>interface</code> for object shapes (supports merging), <code>type</code> for unions
+      and complex compositions</li>
+    <li><code>unknown</code> is a type-safe alternative to <code>any</code>, forces a check before
+      use</li>
+    <li>Utility types: <code>Partial</code>, <code>Required</code>, <code>Readonly</code>,
+      <code>Pick</code>, <code>Omit</code>, <code>Record</code>, <code>ReturnType</code></li>
+    <li>Generics let a function, interface, or class work over a type parameter instead of one
+      fixed type</li>
+  </ul>
+
+  <h2>React</h2>
+  <ul>
+    <li>Function components with Hooks are the modern default, class components are legacy</li>
+    <li>State updates must create a new reference, mutating in place skips the re-render</li>
+    <li>Keys let React match list items across renders, missing or unstable keys hurt update
+      efficiency and can cause subtle bugs</li>
+    <li>Hooks rules: only call at the top level, only from React functions, always in the same
+      order</li>
+    <li><code>useMemo</code> memoizes a value, <code>useCallback</code> memoizes a function
+      reference, both exist to avoid unnecessary re-renders</li>
+  </ul>
+
+  <h2>Redux</h2>
+  <ul>
+    <li>Flow: action dispatched, reducer computes new state, UI re-renders from the new state</li>
+    <li>Reducers must be pure functions, never mutate state directly (Redux Toolkit's Immer makes
+      this look like mutation while staying immutable underneath)</li>
+    <li><code>useSelector</code> reads state, <code>useDispatch</code> sends actions</li>
+    <li><code>createAsyncThunk</code> handles async logic with pending/fulfilled/rejected states</li>
+  </ul>
+
+  <h2>Angular</h2>
+  <ul>
+    <li>Structural directives change DOM structure (<code>*ngIf</code>, <code>*ngFor</code>),
+      attribute directives change appearance/behavior (<code>[ngClass]</code>,
+      <code>[ngStyle]</code>)</li>
+    <li>Data binding: interpolation <code>{{ }}</code>, property <code>[ ]</code>, event
+      <code>( )</code>, two-way <code>[( )]</code></li>
+    <li>Services are injected via dependency injection rather than instantiated directly</li>
+    <li>ReactiveFormsModule for complex/dynamic forms, FormsModule for simple template-driven
+      forms</li>
+  </ul>
+</div>

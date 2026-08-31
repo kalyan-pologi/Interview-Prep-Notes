@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Describe a challenging bug or performance issue you diagnosed and resolved.</h1>
+  <p>Behavioral question 11 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: The 30 to 60 second chat operation slowdown</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> In UAT, basic chat operations like sending or deleting a message were taking 30 to 60 seconds, which made the feature look completely broken, even though nothing was obviously failing.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I had to find the actual source of the slowness, since it clearly wasn't one single failing query, it was something more systemic.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I used Hibernate's SQL logging in a local profile combined with actual EXPLAIN ANALYZE runs against a UAT sized dataset, rather than just eyeballing the JPQL, since generated query plans can look fine on a small local dataset and still be catastrophic once row counts grow. That surfaced a pattern of cumulative redundant queries across message, attachment, session, and participant lookups, close to a classic N+1 pattern from lazy loaded associations. I combined multi step database writes into single transactions, merged separate lookups into joined JPQL queries, and reordered validation so cheap checks like authorization ran before any database call.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Total time dropped from 30 to 60 seconds down to under 2 to 3 seconds, and I also found several correctness bugs hiding behind the slowness, like a delete endpoint returning the wrong status code.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: A group membership pattern getting expensive as usage grew</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> In the same real time messaging system, I noticed that the pattern used to check group membership on every subscription was scaling in cost with the number of open sessions a user had, meaning heavy users of the platform were disproportionately expensive to serve.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I needed to rework this so cost didn't scale linearly with how many sessions someone had open at once.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I reworked the subscription management logic and moved presence tracking out of a per session, in memory pattern into a global Redis backed presence service, so presence state lived in one shared place instead of being recomputed per session per user on every subscribe event, which also fixed a correctness gap since in memory state didn't survive across multiple instances anyway.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The cost per heavy user dropped significantly, and the presence logic became simpler to reason about overall, since it was centralized instead of scattered across per session checks.</div>
+  </div>

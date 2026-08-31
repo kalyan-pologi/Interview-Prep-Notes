@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time you had to learn something quickly.</h1>
+  <p>Behavioral question 9 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Picking up WebFlux and reactive programming for a new pipeline</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> I needed to build a report pipeline that made around 20 calls to a third party API per report, and the existing codebase used Spring WebFlux with Mono and Flux, which I hadn't worked deeply with before.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I had to understand reactive composition well enough to correctly express that some of those 20 calls had to succeed together, using Mono.zip, while others should be allowed to fail individually without aborting the whole report, using Flux with onErrorResume.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I spent focused time working through how the reactive chain actually propagates errors versus values, and specifically how onErrorResume differs from just wrapping something in a try catch in blocking code, since in a reactive chain an unhandled error terminates the entire stream downstream of it rather than just the one call, which is what made Mono.zip the right fit for calls that genuinely had to succeed together. I then applied that directly to the required versus optional call phases of the pipeline.</div>
+    <div class="star-row"><span class="star-label">Result:</span> I was able to implement the four phase pipeline correctly, with required calls failing fast together and optional calls soft failing independently, and that reactive composition knowledge carried over directly into later work composing an orchestrator and a PDF renderer without extra HTTP calls.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Learning Testcontainers to properly test database specific behavior</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Our repository tests were originally running against an in memory H2 database, but I needed to verify behavior that depended on real SQL Server specific features, like a genuine unique constraint upsert and cascading deletes.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I hadn't used Testcontainers before, and needed to get a real SQL Server instance spinning up automatically inside our test suite quickly, without slowing down the whole test run too much.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I learned how to declare a container as a static field annotated with Container so it's shared across all test methods in a class and only started once instead of once per test, and used DynamicPropertySource to inject the container's connection details into the Spring datasource configuration before the context starts, since that runs early enough to override the datasource properties before any bean tries to connect.</div>
+    <div class="star-row"><span class="star-label">Result:</span> I got integration tests running against real SQL Server behavior within a short time, which caught real constraint and cascade behavior that H2 would have silently handled differently, giving much more confidence in that part of the system.</div>
+  </div>

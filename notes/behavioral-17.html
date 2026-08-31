@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about the toughest decision you've made in the past six months.</h1>
+  <p>Behavioral question 17 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Deciding to migrate off self hosted WebSocket infrastructure instead of continuing to patch it</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Our real time messaging system kept having intermittent connection failures in production under multi instance load, and we had already applied a couple of smaller fixes that only partially helped.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I had to decide between continuing to invest in tuning our existing self hosted setup, which felt more familiar and lower risk on the surface, or migrating to a managed relay service, which was a bigger change with more unknowns.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I weighed that the root cause, sticky session cookies not surviving a hop through our content delivery layer, was fundamentally an architectural mismatch, not something a config tweak could fully solve, since no amount of session affinity tuning changes the fact that the routing layer in front of us wasn't guaranteed to honor it. I decided to recommend the migration despite it being a larger, riskier change, because continuing to patch felt like it would just keep producing the same class of intermittent failure indefinitely.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The migration fully resolved the issue, and looking back, it was the right call, even though at the time the safer feeling option was to keep making smaller adjustments to the existing setup.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Choosing to reuse an ill fitting schema instead of creating a new one for land appraisals</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Land appraisals produced a data shape that barely resembled the existing appraisal schema, no ARV, no bedroom or bathroom counts, no adjustment breakdown at all.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I had to decide whether to force this data into the existing shared schema, leaving many columns null, or introduce a third, land specific schema that would fit the data much more precisely.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I chose to reuse the existing schema, accepting that it would look like a poor fit on paper, specifically to avoid schema proliferation and to keep all three property types queryable through one consistent set of tables instead of three separate ones that every future report or migration would need to touch. I made sure to document clearly which columns were intentionally null for land, so it wouldn't look like an oversight to someone reading the code later.</div>
+    <div class="star-row"><span class="star-label">Result:</span> It kept the system simpler overall, with one shared schema instead of three, and the documentation around the intentional nulls has made it easy for others to understand the design choice without needing to ask me directly.</div>
+  </div>

@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time you took ownership of something outside your responsibility.</h1>
+  <p>Behavioral question 7 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Noticing two endpoints were silently not being tracked for billing</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> While working on a completely different task, I noticed that two endpoints, one for land based comps and one for plex based comps, were computing a result and just discarding it, unlike the main appraisal endpoint which properly recorded every request into the paid history table.</div>
+    <div class="star-row"><span class="star-label">Task:</span> This wasn't something I was assigned to fix, but it meant billable work wasn't being tracked consistently, which is a real business risk, not just a code style issue.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I flagged it and then took it on myself to bring both endpoints in line with the existing save pattern already used by the main appraisal endpoint, reusing the same historyService.saveAppraisal call rather than inventing a new pattern, so both endpoints picked up the same retry and critical-log-on-failure behavior the main endpoint already had for free.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Both endpoints now get properly recorded, closing a real consistency gap, and it was a good example of noticing drift in a codebase and choosing to fix it in a way that matched existing patterns instead of introducing something new.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Fixing a bean initialization order bug affecting monitoring, not just my feature</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> While working on notification delivery, I noticed our application performance monitoring logs had a gap right after startup, which wasn't related to what I was actually assigned to build.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Nobody had traced this yet, and it wasn't officially my area, but it meant we had blind spots in observability that could hide real issues later.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I dug into it and found the root cause was Spring bean initialization order, a log clearing configuration bean was running after the APM appender had already registered, effectively wiping out its early logs, since Spring doesn't guarantee bean creation order beyond dependency edges you declare explicitly. I reordered the bean initialization using an explicit DependsOn so the log clearing step ran before the APM appender registered, instead of relying on implicit ordering.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The logging gap disappeared, and even though it wasn't part of my assigned scope, fixing it meant the whole team had reliable monitoring going forward, which felt like the right thing to prioritize when I noticed it.</div>
+  </div>

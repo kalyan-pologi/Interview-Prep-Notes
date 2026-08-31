@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Describe a time you disagreed with a team member and how you resolved it.</h1>
+  <p>Behavioral question 19 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Disagreeing on whether to use a hand rolled cache map or Spring's caching abstraction</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A teammate had built a notification template lookup system using a hand rolled ConcurrentHashMap as an in memory cache, and I felt this was reinventing something Spring already provided well, and that it would eventually need equally hand rolled invalidation logic.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I wanted to move it to Spring's Cacheable and CacheEvict annotations instead, but the teammate felt the existing map based approach was simpler and already working.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I walked through a specific scenario with them, template edits made after the application had already started weren't showing up until a full restart, since the hand rolled map had no eviction path at all, only a load-on-startup step. I proposed Cacheable and CacheEvict combined with an authenticated reload endpoint that could evict the cache and fan the invalidation signal out to other instances over Redis pub sub, since CacheEvict alone only clears the cache on the instance that received the request, not the others behind the load balancer.</div>
+    <div class="star-row"><span class="star-label">Result:</span> We agreed on the Spring Cache based approach, it solved the stale template problem cleanly, and it also removed a chunk of manual cache management code, replacing it with well tested framework behavior instead of custom logic we would have had to maintain ourselves.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Disagreeing on whether presence tracking needed to be per instance or global</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A teammate had implemented presence tracking, whether a user is currently online in a session, scoped to a single application instance's memory, and I raised a concern that this would give incorrect presence status once we were running multiple instances.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I needed to convince them this was worth reworking before it caused a real inconsistency in production, since presence looking wrong is a subtle bug that's easy to miss in a single instance test environment.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I explained the specific failure case, a user connected to one instance would show online there, but a different instance serving a different user wouldn't know that, since there was no shared state between instances, so notifications meant to be suppressed because the recipient already had the chat open could incorrectly fire anyway. I proposed moving presence into a global Redis backed service instead, so presence state read a shared source of truth regardless of which instance handled the request.</div>
+    <div class="star-row"><span class="star-label">Result:</span> We moved presence tracking to Redis, which resolved the inconsistency, and it turned out to matter more than either of us initially expected, since it was directly tied to correctly suppressing duplicate new message notifications for users who already had a chat open.</div>
+  </div>

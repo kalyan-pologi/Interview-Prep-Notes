@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ What is your greatest strength and your biggest weakness?</h1>
+  <p>Behavioral question 3 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1 (strength): Designing systems so two related but different write paths can never collide</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> On the appraisal side of the platform, there were two very different ways an appraisal could get saved, one where a user pays and it goes into a permanent audit history table, and one where a property is just being browsed and gets a free, reusable cached estimate.</div>
+    <div class="star-row"><span class="star-label">Task:</span> These two paths absolutely could not share a write path, because a cache miss accidentally triggering a paid history write, or vice versa, would be a real business problem, either double charging someone or corrupting the audit trail.</div>
+    <div class="star-row"><span class="star-label">Action:</span> My strength is thinking through this kind of separation at the module level, not just the method level. A weaker version of this would be a shared service class with an if-else branching on a payment flag, which looks fine until someone adds a feature to one branch that leaks into the other. I kept the caching logic and the history logic in two completely separate Spring Boot starter modules, so it wasn't just a convention that could be broken by someone adding a few lines in the wrong service class, it required a deliberate new dependency to even attempt to cross that boundary.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The two systems have coexisted without a single incident of one leaking into the other, and that separation is something new engineers on the team can see just from the module structure, without needing tribal knowledge.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2 (weakness): Diving into implementation before fully mapping out edge cases</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Early on, when I built a chat session feature that allowed a transaction coordinator to have one on one chats with both a lender and a buyer, I put a unique index on session type and participants assuming that was enough to prevent duplicate sessions.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I hadn't fully thought through the case where the transaction coordinator was also the one creating the session.</div>
+    <div class="star-row"><span class="star-label">Action:</span> A participant count check in that logic incorrectly collapsed to a single UUID when the transaction coordinator was both a participant and the creator, since a set deduplicated the creator id against the participant id, so the count check that was supposed to require two distinct people passed with one. I had to go back, drop the index, and rework both the uniqueness logic and the participant count check together.</div>
+    <div class="star-row"><span class="star-label">Result:</span> I fixed it, but it taught me that my weakness is sometimes moving to implementation a bit too quickly on features with several actors involved, instead of writing out every actor combination first. Since then, on anything involving multiple roles or participants, I explicitly list out every combination before writing the first line of code, which has saved me from repeating that mistake.</div>
+  </div>

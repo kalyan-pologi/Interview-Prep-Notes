@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ How do you approach a codebase or problem you've never seen before?</h1>
+  <p>Behavioral question 16 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: Coming into a caching problem with 20 different call sites</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> I was asked to add caching to a report generation pipeline that made about 20 different calls to a third party API, spread across several endpoint classes I hadn't written.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Before writing any code, I needed to understand how all these calls actually flowed through the system, rather than assuming I could just wrap each call site individually.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I traced the code and found that every one of those 20 calls, regardless of which endpoint class triggered it, ultimately funneled through a single shared transport interface with one method. That single point of convergence became the natural place to add caching as a decorator, rather than touching 20 separate places, since a decorator around one interface method is invisible to every caller and needs no changes at any call site.</div>
+    <div class="star-row"><span class="star-label">Result:</span> I was able to add caching with zero changes to any of the 20 existing endpoint classes, purely because I spent time understanding the actual call graph first instead of jumping straight to implementation.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Understanding an existing dual persistence system before extending it</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> I joined an ongoing effort to build a free caching path for appraisal data, next to an already existing paid history path that I hadn't originally built.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I needed to understand exactly how the existing history path worked, including its failure handling and its trust boundaries, before I could safely build something that had to coexist with it without ever crossing into its write path.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I read through how the history path derived identity from the JWT rather than the request body, since trusting a client supplied id for a paid write is an easy way to let one user's request write into another user's record, how it used Spring Retry with an escalating critical log on failure, and how PDFs were stored with just a filename while the full URL was built at read time so nothing time sensitive ever got persisted. I deliberately mirrored several of those same patterns in the new cache module instead of inventing different ones.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The new cache module felt consistent with the existing system from day one, and reusing proven patterns, like deriving identity server side and building URLs at read time, meant I avoided reintroducing problems the original system had already solved.</div>
+  </div>

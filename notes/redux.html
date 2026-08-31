@@ -1,0 +1,282 @@
+<div class="section-header">
+  <div class="tag">Frontend</div>
+  <h1>🔄 Redux</h1>
+  <p>Redux core concepts, quick reference.</p>
+</div>
+
+<div class="note-body">
+  <p><b>Redux flow:</b> User action, dispatch action, reducer, new state, UI update.</p>
+
+  <h2>Store</h2>
+  <p>The central state container holding the entire application state, a single source of truth
+    instead of state scattered across components.</p>
+  <pre><code>import { configureStore } from '@reduxjs/toolkit';
+
+const store = configureStore({
+  reducer: {
+    user: userReducer,
+    cart: cartReducer,
+    products: productsReducer,
+  },
+});</code></pre>
+
+  <h2>Actions</h2>
+  <p>Plain objects describing something that happened in the application.</p>
+  <pre><code>const addToCart = (product) => ({
+  type: 'cart/addItem',
+  payload: product,
+});
+
+const removeFromCart = (productId) => ({
+  type: 'cart/removeItem',
+  payload: productId,
+});</code></pre>
+
+  <h2>Reducers</h2>
+  <p>Pure functions that take the current state and an action and return a new state, never
+    mutating the original.</p>
+  <pre><code>const initialState = { items: [], total: 0 };
+
+function cartReducer(state = initialState, action) {
+  switch (action.type) {
+    case 'cart/addItem':
+      return {
+        ...state,
+        items: [...state.items, action.payload],
+        total: state.total + action.payload.price,
+      };
+    case 'cart/removeItem':
+      return {
+        ...state,
+        items: state.items.filter(item => item.id !== action.payload),
+      };
+    default:
+      return state;
+  }
+}</code></pre>
+
+  <h2>Redux Toolkit (RTK)</h2>
+  <p>The official recommended way to write Redux with far less boilerplate than hand-writing
+    action types, action creators, and reducers separately.</p>
+  <ul>
+    <li><code>configureStore()</code>, sets up the store</li>
+    <li><code>createSlice()</code>, creates a reducer plus its matching action creators together</li>
+    <li><code>createAsyncThunk()</code>, handles async logic</li>
+  </ul>
+  <pre><code>import { createSlice } from '@reduxjs/toolkit';
+
+const cartSlice = createSlice({
+  name: 'cart',
+  initialState: { items: [], total: 0 },
+  reducers: {
+    addItem: (state, action) => {
+      state.items.push(action.payload);
+      state.total += action.payload.price;
+    },
+    removeItem: (state, action) => {
+      state.items = state.items.filter(item => item.id !== action.payload);
+    },
+    clearCart: (state) => {
+      state.items = [];
+      state.total = 0;
+    },
+  },
+});
+
+export const { addItem, removeItem, clearCart } = cartSlice.actions;
+export default cartSlice.reducer;</code></pre>
+
+  <h2>useSelector & useDispatch</h2>
+  <p><code>useSelector</code> reads data out of the store, <code>useDispatch</code> sends actions
+    into it.</p>
+  <pre><code>import { useSelector, useDispatch } from 'react-redux';
+import { addItem } from './cartSlice';
+
+function CartSummary() {
+  const items = useSelector(state => state.cart.items);
+  const total = useSelector(state => state.cart.total);
+  return (
+    &lt;div&gt;
+      &lt;p&gt;Items: {items.length}&lt;/p&gt;
+      &lt;p&gt;Total: ${total}&lt;/p&gt;
+    &lt;/div&gt;
+  );
+}
+
+function ProductCard({ product }) {
+  const dispatch = useDispatch();
+  return &lt;button onClick={() => dispatch(addItem(product))}&gt;Add to Cart&lt;/button&gt;;
+}</code></pre>
+
+  <h2>Async Actions (Thunks)</h2>
+  <p>Functions that handle async operations, an API call for example, and dispatch actions as the
+    request moves through pending, fulfilled, and rejected states.</p>
+  <pre><code>import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+
+export const fetchUsers = createAsyncThunk('users/fetch', async () => {
+  const response = await fetch('/api/users');
+  return response.json();
+});
+
+const usersSlice = createSlice({
+  name: 'users',
+  initialState: { list: [], loading: false, error: null },
+  reducers: {},
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchUsers.pending, (state) => { state.loading = true; })
+      .addCase(fetchUsers.fulfilled, (state, action) => {
+        state.loading = false;
+        state.list = action.payload;
+      })
+      .addCase(fetchUsers.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message;
+      });
+  },
+});</code></pre>
+
+  <h2>Middleware</h2>
+  <p>Functions that intercept an action before it reaches the reducer, used for logging, handling
+    async calls, or catching and reporting errors.</p>
+  <pre><code>const loggerMiddleware = (store) => (next) => (action) => {
+  console.log('Dispatching:', action);
+  const result = next(action);
+  console.log('Next state:', store.getState());
+  return result;
+};
+
+const store = configureStore({
+  reducer: rootReducer,
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(loggerMiddleware),
+});</code></pre>
+
+  <h2>Selectors</h2>
+  <p>Functions that extract or derive data from state, often memoized so an expensive calculation
+    only reruns when its inputs actually change.</p>
+  <pre><code>import { createSelector } from '@reduxjs/toolkit';
+
+const selectCartItems = (state) => state.cart.items;
+
+const selectCartTotal = createSelector(
+  [selectCartItems],
+  (items) => items.reduce((sum, item) => sum + item.price, 0)
+);
+
+function Cart() {
+  const total = useSelector(selectCartTotal);
+  return &lt;div&gt;Total: ${total}&lt;/div&gt;;
+}</code></pre>
+
+  <h2>Provider</h2>
+  <p>The React component that makes the Redux store available to the rest of the app, wrapping
+    the root component.</p>
+  <pre><code>import { Provider } from 'react-redux';
+import { store } from './store';
+
+function App() {
+  return (
+    &lt;Provider store={store}&gt;
+      &lt;YourApp /&gt;
+    &lt;/Provider&gt;
+  );
+}</code></pre>
+
+  <h2>Immutability</h2>
+  <p>State is never mutated directly, a new object is always returned instead. Redux Toolkit uses
+    Immer internally, so reducer code can look like it is mutating state directly while it
+    actually produces a new immutable object behind the scenes. Traditional Redux without RTK
+    requires manual spreading.</p>
+  <pre><code>// Redux Toolkit (Immer under the hood)
+reducers: {
+  updateUser: (state, action) => {
+    state.user.name = action.payload; // looks like mutation, isn't
+  },
+}
+
+// Traditional Redux
+function reducer(state, action) {
+  return {
+    ...state,
+    user: { ...state.user, name: action.payload },
+  };
+}</code></pre>
+
+  <h2>DevTools</h2>
+  <p>A browser extension for inspecting Redux state and actions, time-travel debugging, and
+    replaying actions. Enabled by default with Redux Toolkit.</p>
+  <pre><code>const store = configureStore({
+  reducer: rootReducer,
+  devTools: process.env.NODE_ENV !== 'production',
+});</code></pre>
+
+  <h2>Complete Setup Example</h2>
+  <pre><code>// store.js
+import { configureStore } from '@reduxjs/toolkit';
+import userReducer from './features/userSlice';
+import cartReducer from './features/cartSlice';
+
+export const store = configureStore({
+  reducer: { user: userReducer, cart: cartReducer },
+});
+
+// features/cartSlice.js
+import { createSlice } from '@reduxjs/toolkit';
+
+const cartSlice = createSlice({
+  name: 'cart',
+  initialState: { items: [], total: 0 },
+  reducers: {
+    addItem: (state, action) => {
+      state.items.push(action.payload);
+      state.total += action.payload.price;
+    },
+    removeItem: (state, action) => {
+      const index = state.items.findIndex(item => item.id === action.payload);
+      if (index !== -1) {
+        state.total -= state.items[index].price;
+        state.items.splice(index, 1);
+      }
+    },
+  },
+});
+export const { addItem, removeItem } = cartSlice.actions;
+export default cartSlice.reducer;
+
+// index.js
+import { Provider } from 'react-redux';
+import { store } from './store';
+
+ReactDOM.render(
+  &lt;Provider store={store}&gt;&lt;App /&gt;&lt;/Provider&gt;,
+  document.getElementById('root')
+);
+
+// Cart.js
+import { useSelector, useDispatch } from 'react-redux';
+import { addItem, removeItem } from './features/cartSlice';
+
+function Cart() {
+  const items = useSelector(state => state.cart.items);
+  const total = useSelector(state => state.cart.total);
+  const dispatch = useDispatch();
+
+  return (
+    &lt;div&gt;
+      &lt;h2&gt;Shopping Cart&lt;/h2&gt;
+      {items.map(item => (
+        &lt;div key={item.id}&gt;
+          &lt;span&gt;{item.name}, ${item.price}&lt;/span&gt;
+          &lt;button onClick={() => dispatch(removeItem(item.id))}&gt;Remove&lt;/button&gt;
+        &lt;/div&gt;
+      ))}
+      &lt;h3&gt;Total: ${total}&lt;/h3&gt;
+    &lt;/div&gt;
+  );
+}</code></pre>
+
+  <h2>Quick Commands</h2>
+  <pre><code># Install Redux Toolkit and React-Redux
+npm install @reduxjs/toolkit react-redux</code></pre>
+</div>

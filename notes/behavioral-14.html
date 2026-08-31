@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time a project didn't go as planned. How did you manage it?</h1>
+  <p>Behavioral question 14 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: A migration that worked everywhere except a genuinely fresh database</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> I built Flyway migrations for a new caching schema, tested them, and they worked fine in our existing dev and UAT databases. Everything looked ready to ship.</div>
+    <div class="star-row"><span class="star-label">Task:</span> When we later tried running the exact same migrations against a completely fresh, empty database, they failed with a SQL Server specific error, because the migrations assumed the schema itself already existed.</div>
+    <div class="star-row"><span class="star-label">Action:</span> Instead of just patching around it in that one environment, I added a proper baseline migration that explicitly creates the schema first, using a guarded if not exists check, ordered before Flyway's own history table gets created, so the ordering was enforced by the migration's own version number rather than by remembering to run a manual step first.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Migrations then succeeded reliably on a genuinely empty database, not just on databases that happened to already have the schema from earlier testing. It was a good reminder that works on my machine can extend all the way to works in every environment I've personally tested, which isn't the same as actually correct.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: An endpoint contract needing to change without breaking anyone already depending on it</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> An endpoint that other services already called always returned a 200 status code regardless of what actually happened, which meant those consumers couldn't distinguish a real failure from success.</div>
+    <div class="star-row"><span class="star-label">Task:</span> The plan was to introduce real status codes, but partway through I realized some consumers might already have logic, even if fragile, built around always receiving a 200 with a specific body shape.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I adjusted the approach to guarantee the response DTO itself never changed shape, only the status code changed, and scoped a RestControllerAdvice specifically to that one controller using assignableTypes, so existing consumers parsing the body wouldn't break even if they hadn't updated their status code handling yet, and no other controller's error handling was affected by the new advice bean.</div>
+    <div class="star-row"><span class="star-label">Result:</span> We were able to ship more accurate error signaling without a coordinated rollout across every consuming team, which hadn't been the original simpler plan, but turned out to be the safer path given what was actually at stake.</div>
+  </div>

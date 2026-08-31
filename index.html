@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Interview Prep Notes</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+
+<body>
+
+  <!-- Hamburger -->
+  <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  <div class="overlay" id="overlay" onclick="toggleSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <nav class="sidebar" id="sidebar">
+    <div class="sidebar-logo"><span>💼</span> Interview Prep</div>
+
+    <div class="nav-section">Getting Started</div>
+    <a class="nav-item active" href="#home" data-note="home"><span class="icon">🏠</span> Home</a>
+    <a class="nav-item" href="#intro" data-note="intro"><span class="icon">👋</span> Intro</a>
+
+    <div class="nav-section">Project Write-ups</div>
+
+    <div class="nav-group">
+      <div class="nav-group-label" onclick="toggleGroup('g-projects')"><span class="icon">🏗️</span> Projects <span
+          class="nav-arrow" id="arr-g-projects">▸</span></div>
+      <div class="nav-group-items" id="g-projects">
+        <a class="nav-sub" href="#proj-reidyai" data-note="proj-reidyai">ReidyAI</a>
+        <a class="nav-sub" href="#proj-citibank" data-note="proj-citibank">Citibank</a>
+        <a class="nav-sub" href="#proj-accenture" data-note="proj-accenture">Accenture (MyHub)</a>
+        <a class="nav-sub" href="#proj-fortis" data-note="proj-fortis">Fortis Medical</a>
+        <a class="nav-sub" href="#proj-rag-chatbot" data-note="proj-rag-chatbot">Medical RAG Chatbot</a>
+      </div>
+    </div>
+
+    <div class="nav-section">Java & Spring</div>
+
+    <div class="nav-group">
+      <div class="nav-group-label" onclick="toggleGroup('g-javaspring')"><span class="icon">☕</span> Core Topics <span
+          class="nav-arrow" id="arr-g-javaspring">▸</span></div>
+      <div class="nav-group-items" id="g-javaspring">
+        <a class="nav-sub" href="#java-topics" data-note="java-topics">Java Topics</a>
+        <a class="nav-sub" href="#spring-topics" data-note="spring-topics">Spring Framework Topics</a>
+        <a class="nav-sub" href="#solid-patterns" data-note="solid-patterns">SOLID Principles & Design Patterns</a>
+      </div>
+    </div>
+
+    <div class="nav-section">Behavioral</div>
+
+    <div class="nav-group">
+      <div class="nav-group-label" onclick="toggleGroup('g-behavioral')"><span class="icon">🗣️</span> Questions <span
+          class="nav-arrow" id="arr-g-behavioral">▸</span></div>
+      <div class="nav-group-items" id="g-behavioral">
+        <a class="nav-sub" href="#behavioral-01" data-note="behavioral-01">01. Difficult production bug</a>
+        <a class="nav-sub" href="#behavioral-02" data-note="behavioral-02">02. Time you failed</a>
+        <a class="nav-sub" href="#behavioral-03" data-note="behavioral-03">03. Strength & weakness</a>
+        <a class="nav-sub" href="#behavioral-04" data-note="behavioral-04">04. Disagreement with manager</a>
+        <a class="nav-sub" href="#behavioral-05" data-note="behavioral-05">05. Quickly adjusting priorities</a>
+        <a class="nav-sub" href="#behavioral-06" data-note="behavioral-06">06. Conflict on a team</a>
+        <a class="nav-sub" href="#behavioral-07" data-note="behavioral-07">07. Ownership outside responsibility</a>
+        <a class="nav-sub" href="#behavioral-08" data-note="behavioral-08">08. Missed a deadline</a>
+        <a class="nav-sub" href="#behavioral-09" data-note="behavioral-09">09. Learned something quickly</a>
+        <a class="nav-sub" href="#behavioral-10" data-note="behavioral-10">10. Critical/negative feedback</a>
+        <a class="nav-sub" href="#behavioral-11" data-note="behavioral-11">11. Challenging bug/performance issue</a>
+        <a class="nav-sub" href="#behavioral-12" data-note="behavioral-12">12. Improved performance/code quality</a>
+        <a class="nav-sub" href="#behavioral-13" data-note="behavioral-13">13. Unclear/changing requirements</a>
+        <a class="nav-sub" href="#behavioral-14" data-note="behavioral-14">14. Project didn't go as planned</a>
+        <a class="nav-sub" href="#behavioral-15" data-note="behavioral-15">15. Quality vs. delivery speed</a>
+        <a class="nav-sub" href="#behavioral-16" data-note="behavioral-16">16. Unfamiliar codebase/problem</a>
+        <a class="nav-sub" href="#behavioral-17" data-note="behavioral-17">17. Toughest decision</a>
+        <a class="nav-sub" href="#behavioral-18" data-note="behavioral-18">18. Stepped into leadership</a>
+        <a class="nav-sub" href="#behavioral-19" data-note="behavioral-19">19. Disagreed with a team member</a>
+        <a class="nav-sub" href="#behavioral-20" data-note="behavioral-20">20. Communicated technical risk</a>
+      </div>
+    </div>
+
+    <div class="nav-section">Tooling</div>
+
+    <div class="nav-group">
+      <div class="nav-group-label" onclick="toggleGroup('g-tooling')"><span class="icon">🧰</span> Reference <span
+          class="nav-arrow" id="arr-g-tooling">▸</span></div>
+      <div class="nav-group-items" id="g-tooling">
+        <a class="nav-sub" href="#git-commands" data-note="git-commands">Git Commands</a>
+        <a class="nav-sub" href="#junit-concepts" data-note="junit-concepts">JUnit Core Concepts</a>
+        <a class="nav-sub" href="#java-snippets" data-note="java-snippets">Java Code Snippets</a>
+        <a class="nav-sub" href="#sql-snippets" data-note="sql-snippets">SQL Code Snippets</a>
+      </div>
+    </div>
+
+    <div class="nav-section">DevOps</div>
+
+    <div class="nav-group">
+      <div class="nav-group-label" onclick="toggleGroup('g-devops')"><span class="icon">🐳</span> Docker /
+        Kubernetes <span class="nav-arrow" id="arr-g-devops">▸</span></div>
+      <div class="nav-group-items" id="g-devops">
+        <a class="nav-sub" href="#devops-daily" data-note="devops-daily">Daily Commands</a>
+        <a class="nav-sub" href="#devops-useful" data-note="devops-useful">Useful Commands</a>
+        <a class="nav-sub" href="#docker" data-note="docker">Docker</a>
+        <a class="nav-sub" href="#kubernetes" data-note="kubernetes">Kubernetes</a>
+        <a class="nav-sub" href="#minikube" data-note="minikube">Minikube</a>
+      </div>
+    </div>
+
+    <div class="nav-section">Frontend</div>
+
+    <div class="nav-group">
+      <div class="nav-group-label" onclick="toggleGroup('g-frontend')"><span class="icon">🎨</span> Web & Frameworks
+        <span class="nav-arrow" id="arr-g-frontend">▸</span>
+      </div>
+      <div class="nav-group-items" id="g-frontend">
+        <a class="nav-sub" href="#html" data-note="html">HTML</a>
+        <a class="nav-sub" href="#css" data-note="css">CSS</a>
+        <a class="nav-sub" href="#javascript" data-note="javascript">JavaScript</a>
+        <a class="nav-sub" href="#typescript" data-note="typescript">TypeScript</a>
+        <a class="nav-sub" href="#frontend-quickref" data-note="frontend-quickref">Quick Revision Guide</a>
+        <a class="nav-sub" href="#react" data-note="react">React</a>
+        <a class="nav-sub" href="#redux" data-note="redux">Redux</a>
+        <a class="nav-sub" href="#angular" data-note="angular">Angular</a>
+      </div>
+    </div>
+
+  </nav>
+
+  <!-- MAIN — notes are injected here by assets/app.js -->
+  <main class="main">
+    <div class="section active" id="content"></div>
+  </main>
+
+  <script src="assets/app.js"></script>
+</body>
+
+</html>

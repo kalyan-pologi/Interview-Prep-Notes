@@ -1,0 +1,51 @@
+<div class="section-header">
+  <div class="tag">Project</div>
+  <h1>🤖 Medical RAG Chatbot: Streamlit, FAISS, HuggingFace</h1>
+  <p>Retrieval-Augmented Generation chatbot for grounded medical Q&A</p>
+</div>
+
+<div class="note-body">
+  <p>Built a Retrieval-Augmented Generation chatbot that provides medical information sourced from
+    <i>The Gale Encyclopedia of Medicine</i>. The goal was accurate, source-grounded answers with
+    real-time document retrieval and a clean chat interface, instead of a plain LLM answering from
+    memory alone with no way to verify where an answer came from.</p>
+
+  <h2>Key Features</h2>
+  <ul>
+    <li><b>RAG-based Q&A</b>, combines semantic search with generative answers for precise,
+      contextual responses.</li>
+    <li><b>Document retrieval with FAISS</b>, vector similarity search for efficient access to
+      relevant chunks from a large medical encyclopedia.</li>
+    <li><b>LLM-powered responses</b>, uses HuggingFace's <code>google/flan-t5-small</code> model
+      for natural language answers.</li>
+    <li><b>Streamlit chat UI</b>, conversation history and source expansion built in.</li>
+    <li><b>Source-aware</b>, every answer includes reference excerpts from the original document
+      to improve trust and traceability.</li>
+    <li><b>Cloud-friendly</b>, modular setup using Python 3.8+, dotenv for secrets, and a
+      pre-built vector store.</li>
+  </ul>
+
+  <h2>Tech Stack</h2>
+  <ul>
+    <li>Frontend/UI: Streamlit chat interface</li>
+    <li>LLM: HuggingFace Inference API (flan-t5-small)</li>
+    <li>Embeddings: sentence-transformers/all-MiniLM-L6-v2</li>
+    <li>Vector DB: FAISS</li>
+    <li>RAG chain: LangChain's RetrievalQA with a custom prompt</li>
+    <li>File parsing: PyPDFLoader (via LangChain)</li>
+    <li>Environment management: python-dotenv</li>
+    <li>Corpus: The Gale Encyclopedia of Medicine (Second Edition)</li>
+  </ul>
+
+  <h2>Workflow</h2>
+  <ol>
+    <li><b>PDF ingestion</b>, loads encyclopedia content using PyPDFLoader.</li>
+    <li><b>Chunking</b>, splits text using RecursiveCharacterTextSplitter, 500 character chunks
+      with overlap.</li>
+    <li><b>Embedding and storage</b>, embeds chunks using HuggingFace embeddings and stores them
+      in FAISS locally.</li>
+    <li><b>Question answering</b>, a user question retrieves the relevant chunks from FAISS,
+      passes them to the LLM, and the response is generated and displayed with its source
+      excerpts.</li>
+  </ol>
+</div>

@@ -1,0 +1,98 @@
+<div class="section-header">
+  <div class="tag">Frontend</div>
+  <h1>🅰️ Angular</h1>
+  <p>Angular core concepts, definitions and use cases.</p>
+</div>
+
+<div class="note-body">
+  <h2>Components</h2>
+  <p>The basic building blocks of an Angular application. A component controls a portion of the
+    UI, with an associated template (HTML), styles (CSS), and logic (TypeScript). A
+    <code>HeaderComponent</code> for the navigation bar, a <code>ProductListComponent</code> to
+    show items, a <code>UserProfileComponent</code> to show user info.</p>
+
+  <h2>Services & Dependency Injection</h2>
+  <p>Reusable classes for business logic, data fetching, or utility functions, injected into
+    components through Angular's dependency injection system rather than instantiated directly.
+    An <code>AuthService</code> handling login/logout, a <code>UserService</code> fetching
+    profiles from an API, a <code>DataService</code> managing shared application state.</p>
+
+  <h2>Directives</h2>
+  <p>Classes that change the DOM's structure or behavior.</p>
+  <ul>
+    <li><b>Structural directives</b> change DOM structure, <code>*ngIf</code>,
+      <code>*ngFor</code></li>
+    <li><b>Attribute directives</b> change appearance or behavior,
+      <code>[ngClass]</code>, <code>[ngStyle]</code></li>
+  </ul>
+  <pre><code>&lt;div *ngIf="isLoggedIn"&gt;Welcome back&lt;/div&gt;
+&lt;div [ngClass]="{active: isActive}"&gt;Item&lt;/div&gt;
+&lt;li *ngFor="let item of items"&gt;{{ item.name }}&lt;/li&gt;</code></pre>
+
+  <h2>Pipes</h2>
+  <p>Transform data directly in the template without touching component logic.</p>
+  <pre><code>{{ today | date:'shortDate' }}
+{{ price | currency:'USD' }}
+{{ name | uppercase }}
+{{ items | filter:searchTerm }}</code></pre>
+
+  <h2>Data Binding</h2>
+  <ul>
+    <li><b>Interpolation</b> <code>{{ }}</code>, displays component data in the template</li>
+    <li><b>Property binding</b> <code>[ ]</code>, binds a component property to an element
+      attribute</li>
+    <li><b>Event binding</b> <code>( )</code>, handles a DOM event</li>
+    <li><b>Two-way binding</b> <code>[( )]</code>, combines property and event binding into one</li>
+  </ul>
+  <pre><code>&lt;input [(ngModel)]="username"&gt;
+&lt;button (click)="login()"&gt;Login&lt;/button&gt;
+&lt;img [src]="imageUrl"&gt;
+&lt;p&gt;{{ userMessage }}&lt;/p&gt;</code></pre>
+
+  <h2>Event Handlers</h2>
+  <p>Component functions that respond to user actions, click, input, submit, and so on. A button
+    click calling <code>addToCart(product)</code>, a form submission triggering
+    <code>registerUser()</code>, an input change calling
+    <code>onSearch($event)</code>.</p>
+
+  <h2>HttpClientModule</h2>
+  <p>Provides the tools for communicating with backend APIs over HTTP, fetching data, sending
+    login credentials, uploading files.</p>
+
+  <h2>Forms</h2>
+  <ul>
+    <li><b>FormsModule</b>, template-driven forms, simple and declarative, good for small forms</li>
+    <li><b>ReactiveFormsModule</b>, reactive forms, programmatic and scalable, better for complex
+      validation and dynamic form structures</li>
+  </ul>
+  <p>Used for login forms with required/email validation, multi-step checkout flows built from
+    reactive form groups, and dynamic forms with conditional fields.</p>
+
+  <h2>Routing</h2>
+  <p>Navigation between views without a full page reload, the core of a single-page application.</p>
+  <ul>
+    <li>Basic routes, <code>/home</code>, <code>/about</code>, <code>/contact</code></li>
+    <li>Parameterized routes, <code>/products/:id</code>, <code>/users/:userId/profile</code></li>
+    <li>Nested routing for complex layouts</li>
+    <li>Route guards for authentication and authorization</li>
+    <li>Lazy loading for faster initial page load</li>
+  </ul>
+
+  <h2>Animations</h2>
+  <p>Angular's animation API, built on top of the Web Animations standard, for smooth UI
+    transitions. Fading notifications in and out, sliding in a side nav, loading spinners, page
+    transitions, hover states.</p>
+
+  <h2>Testing</h2>
+  <p>Unit tests with Jasmine and Karma, end-to-end tests with Protractor or Cypress.</p>
+  <ul>
+    <li><b>Unit testing</b>, individual components, services, and functions in isolation</li>
+    <li><b>Integration testing</b>, how components interact with each other</li>
+    <li><b>E2E testing</b>, complete user workflows through the running application</li>
+  </ul>
+
+  <figure class="note-figure">
+    <img src="assets/img/angular-vs-react-comparison-table.png" alt="Angular vs React comparison table">
+    <figcaption>Angular vs. React comparison</figcaption>
+  </figure>
+</div>

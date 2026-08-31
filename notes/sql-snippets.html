@@ -1,0 +1,305 @@
+<div class="section-header">
+  <div class="tag">Tooling</div>
+  <h1>🗄️ SQL Code Snippets</h1>
+  <p>Reusable SQL code snippets, question by question.</p>
+</div>
+
+<div class="note-body">
+  <h2>DDL Basics</h2>
+
+  <p><b>Q: Create a table with a primary key, a not-null column, and a unique column.</b></p>
+  <pre><code>CREATE TABLE student (
+    student_id INT PRIMARY KEY AUTO_INCREMENT,
+    name       VARCHAR(20) NOT NULL,
+    major      VARCHAR(20) UNIQUE
+);</code></pre>
+
+  <p><b>Q: Add and then drop a column from an existing table.</b></p>
+  <pre><code>ALTER TABLE student ADD gpa DECIMAL(3, 2);
+ALTER TABLE student DROP COLUMN gpa;</code></pre>
+
+  <p><b>Q: Drop a table entirely.</b></p>
+  <pre><code>DROP TABLE student;</code></pre>
+
+  <p><b>Q: Create a new table from an existing table's data.</b></p>
+  <pre><code>CREATE TABLE newtable AS SELECT * FROM EmployeeInfo;</code></pre>
+
+  <h2>Basic CRUD</h2>
+
+  <p><b>Q: Insert a full row, and insert a row specifying only some columns.</b></p>
+  <pre><code>INSERT INTO student VALUES (1, 'kalyan', 'maths');
+INSERT INTO student(student_id, name) VALUES (2, 'prabhas');</code></pre>
+
+  <p><b>Q: Select all rows, sorted by two columns.</b></p>
+  <pre><code>SELECT name, major FROM student ORDER BY name, major DESC;</code></pre>
+
+  <p><b>Q: Limit results to the first N rows.</b></p>
+  <pre><code>SELECT * FROM student LIMIT 2;</code></pre>
+
+  <p><b>Q: Filter rows where a column matches one of several values.</b></p>
+  <pre><code>SELECT * FROM student WHERE name IN ('kalyan', 'prabhas');</code></pre>
+
+  <p><b>Q: Filter rows with a partial text match.</b></p>
+  <pre><code>SELECT * FROM student WHERE name LIKE '%kal%';</code></pre>
+
+  <p><b>Q: Get the distinct values of a column.</b></p>
+  <pre><code>SELECT DISTINCT sex FROM employee;</code></pre>
+
+  <p><b>Q: Update a row's value based on a condition.</b></p>
+  <pre><code>UPDATE student SET name = 'poloji' WHERE name = 'kalyan';</code></pre>
+
+  <p><b>Q: Delete a row based on a condition.</b></p>
+  <pre><code>DELETE FROM student WHERE name = 'poloji';</code></pre>
+
+  <h2>Foreign Keys</h2>
+
+  <p><b>Q: What happens to child rows when the referenced parent row is deleted, if the foreign
+    key should null them out instead of blocking the delete?</b></p>
+  <pre><code>FOREIGN KEY (mrg_id) REFERENCES student(student_id) ON DELETE SET NULL;</code></pre>
+
+  <p><b>Q: Same question, but child rows should be deleted along with the parent.</b></p>
+  <pre><code>FOREIGN KEY (mrg_id) REFERENCES student(student_id) ON DELETE CASCADE;</code></pre>
+
+  <h2>Aggregates</h2>
+
+  <p><b>Q: Count the number of employees.</b></p>
+  <pre><code>SELECT COUNT(emp_id) FROM employee;</code></pre>
+
+  <p><b>Q: Find the minimum salary in each department.</b></p>
+  <pre><code>SELECT dept, MIN(salary) FROM employee GROUP BY dept;</code></pre>
+
+  <p><b>Q: Count how many employees are in each department.</b></p>
+  <pre><code>SELECT DepartmentID, COUNT(EmployeeID) AS EmployeeCount
+FROM Employee GROUP BY DepartmentID;</code></pre>
+
+  <h2>UNION vs. UNION ALL</h2>
+
+  <p><b>Q: Combine two result sets and remove duplicate rows.</b></p>
+  <pre><code>SELECT name AS first_name FROM employee
+UNION
+SELECT major FROM student;</code></pre>
+
+  <p><b>Q: Combine two result sets keeping every row, including duplicates (faster since it skips
+    the dedup step).</b></p>
+  <pre><code>SELECT emp_name, dept FROM employee e1 WHERE e1.dept = 'HR'
+UNION ALL
+SELECT emp_name, dept FROM employee e2 WHERE e2.dept = 'HR';</code></pre>
+
+  <h2>Joins</h2>
+
+  <p><b>Q: Get only rows that match in both tables.</b></p>
+  <pre><code>SELECT e.emp_id, e.first_name
+FROM employee e
+JOIN student s ON e.emp_id = s.std_id;</code></pre>
+
+  <p><b>Q: Get all rows from the left table, with nulls where there's no match on the right.</b></p>
+  <pre><code>SELECT e.emp_id, e.first_name
+FROM employee e
+LEFT JOIN student s ON e.emp_id = s.std_id;</code></pre>
+
+  <p><b>Q: Get all rows from the right table, with nulls where there's no match on the left.</b></p>
+  <pre><code>SELECT e.emp_id, e.first_name
+FROM employee e
+RIGHT JOIN student s ON e.emp_id = s.std_id;</code></pre>
+
+  <p><b>Q: List each employee alongside their supervisor's name, using the employee table joined
+    to itself.</b></p>
+  <pre><code>SELECT a.emp_id AS "Emp_ID", a.emp_name AS "Employee Name",
+       b.emp_id AS "Supervisor ID", b.emp_name AS "Supervisor Name"
+FROM employee a
+JOIN employee b ON a.emp_supv = b.emp_id;</code></pre>
+
+  <p><b>Q: Same self join, but also include employees who have no supervisor at all.</b></p>
+  <pre><code>SELECT a.emp_id, a.emp_name, b.emp_id, b.emp_name
+FROM employee a
+LEFT JOIN employee b ON a.emp_supv = b.emp_id;</code></pre>
+
+  <h2>Subqueries</h2>
+
+  <p><b>Q: Find employees who sold over 30000 to a single client.</b></p>
+  <pre><code>SELECT first_name FROM employee
+WHERE emp_id IN (
+    SELECT emp_id FROM work_with WHERE total_sales > 30000
+);</code></pre>
+
+  <p><b>Q: Find employees earning above the company average salary.</b></p>
+  <pre><code>SELECT name FROM Employee
+WHERE Salary > (SELECT AVG(Salary) FROM Employee);</code></pre>
+
+  <p><b>Q: Find employees not assigned to any department.</b></p>
+  <pre><code>SELECT * FROM Employee
+WHERE Dept_no NOT IN (SELECT Department_no FROM Department);</code></pre>
+
+  <p><b>Q: Find employees in departments with fewer than 5 people.</b></p>
+  <pre><code>SELECT * FROM Employee
+WHERE DepartmentID IN (
+    SELECT DepartmentID FROM Employee
+    GROUP BY DepartmentID HAVING COUNT(EmployeeID) < 5
+);</code></pre>
+
+  <p><b>Q: Find employees who earn more than their own manager.</b></p>
+  <pre><code>SELECT e.EmployeeID, e.Name, e.Salary
+FROM Employee e
+WHERE e.ManagerID IS NOT NULL
+  AND e.Salary > (
+      SELECT m.Salary FROM Employee m WHERE m.EmployeeID = e.ManagerID
+  );</code></pre>
+
+  <h2>Nth Highest Salary</h2>
+  <p>Five different ways to solve the same classic question, worth knowing more than one since
+    interviewers often ask for an alternative approach as a follow-up.</p>
+
+  <p><b>Q: Find the 4th highest salary using LIMIT with an offset.</b></p>
+  <pre><code>SELECT salary FROM employee ORDER BY salary DESC LIMIT 3, 1;</code></pre>
+
+  <p><b>Q: Find the Nth highest salary using a correlated subquery, without a window function.</b></p>
+  <pre><code>SELECT salary FROM EmployeePosition E1
+WHERE N - 1 = (
+    SELECT COUNT(DISTINCT E2.Salary)
+    FROM EmployeePosition E2
+    WHERE E2.Salary > E1.Salary
+);</code></pre>
+
+  <p><b>Q: Find the 2nd highest salary using RANK() (note: RANK() skips numbers after a tie, e.g.
+    1,2,2,4).</b></p>
+  <pre><code>SELECT salary FROM (
+    SELECT salary, RANK() OVER (ORDER BY Salary DESC) AS rnk FROM Employee
+) ranked
+WHERE rnk = 2;</code></pre>
+
+  <p><b>Q: Find the 3rd and 4th highest salary using DENSE_RANK() (no gaps after a tie, e.g.
+    1,2,2,3).</b></p>
+  <pre><code>SELECT * FROM (
+    SELECT salary, DENSE_RANK() OVER (ORDER BY salary DESC) AS rnk FROM Employee
+) ranked
+WHERE rnk IN (3, 4);</code></pre>
+
+  <p><b>Q: Find the 3rd and 4th highest salary with a CTE using ROW_NUMBER(), where every row gets
+    a unique rank even with ties.</b></p>
+  <pre><code>WITH SalaryRank AS (
+    SELECT Salary, ROW_NUMBER() OVER (ORDER BY Salary DESC) AS rnk FROM Employee
+)
+SELECT Salary FROM SalaryRank WHERE rnk IN (3, 4);</code></pre>
+
+  <h2>Duplicate Rows</h2>
+
+  <p><b>Q: Find rows that are duplicated across a set of columns.</b></p>
+  <pre><code>SELECT e_id, name, age, COUNT(*) AS dup_count
+FROM dup_employee
+GROUP BY e_id, name, age
+HAVING COUNT(*) > 1;</code></pre>
+
+  <p><b>Q: Delete duplicate rows but keep exactly one copy of each (name, email) pair.</b></p>
+  <pre><code>DELETE FROM Employee
+WHERE EmployeeID NOT IN (
+    SELECT MIN(EmployeeID) FROM Employee GROUP BY name, email
+);</code></pre>
+
+  <p><b>Q: Get distinct rows without using the DISTINCT keyword.</b></p>
+  <pre><code>SELECT * FROM employee a
+WHERE rowid = (
+    SELECT MAX(rowid) FROM employee b
+    WHERE a.employee_no = b.employee_no
+);</code></pre>
+
+  <p><b>Q: Remove duplicate rows using rowid, keeping the latest one per key.</b></p>
+  <pre><code>DELETE FROM student a
+WHERE rowid <> (
+    SELECT MAX(rowid) FROM student b WHERE a.rollno = b.rollno
+);</code></pre>
+
+  <h2>CASE Statement</h2>
+
+  <p><b>Q: Classify each employee's salary into High, Medium, or Low.</b></p>
+  <pre><code>SELECT ID,
+    CASE
+        WHEN salary > 10000 THEN 'High'
+        WHEN salary BETWEEN 5000 AND 10000 THEN 'Medium'
+        ELSE 'Low'
+    END AS SalaryLevel
+FROM Employees;</code></pre>
+
+  <p><b>Q: Check whether a table has any rows at all.</b></p>
+  <pre><code>SELECT
+    CASE WHEN EXISTS (SELECT * FROM TableName) THEN 'Has Records'
+         ELSE 'No Records'
+    END AS Status;</code></pre>
+
+  <h2>String Functions</h2>
+
+  <p><b>Q: Convert a name to uppercase.</b></p>
+  <pre><code>SELECT UPPER(EmpFname) AS EmpName FROM EmployeeInfo;</code></pre>
+
+  <p><b>Q: Get the first 5 characters of a name.</b></p>
+  <pre><code>SELECT SUBSTRING(student_name, 1, 5) FROM student;</code></pre>
+
+  <p><b>Q: Get the last 5 characters of a name.</b></p>
+  <pre><code>SELECT RIGHT(student_name, 5) FROM student;</code></pre>
+
+  <p><b>Q: Replace spaces in a name with hyphens.</b></p>
+  <pre><code>SELECT REPLACE(FullName, ' ', '-') FROM EmployeeDetails;</code></pre>
+
+  <p><b>Q: Find the position of a character within a string, case-sensitively.</b></p>
+  <pre><code>SELECT INSTR(FIRST_NAME, BINARY 'a') FROM Worker WHERE FIRST_NAME = 'Amitabh';</code></pre>
+
+  <h2>Date Functions</h2>
+
+  <p><b>Q: Find employees who joined in the last 30 days.</b></p>
+  <pre><code>SELECT * FROM Employee WHERE JoinDate > DATE_SUB(CURDATE(), INTERVAL 30 DAY);
+-- equivalent
+SELECT * FROM Employee WHERE JoinDate >= CURRENT_DATE - INTERVAL 30 DAY;</code></pre>
+
+  <p><b>Q: Check whether a string is a valid date.</b></p>
+  <pre><code>SELECT ISDATE('01/04/2020') AS "MM/DD/YY";  -- returns 1 (true) or 0 (false)</code></pre>
+
+  <h2>Miscellaneous Queries</h2>
+
+  <p><b>Q: Fetch the first 50% of records in a table.</b></p>
+  <pre><code>SELECT * FROM EmployeeInfo
+WHERE EmpId <= (SELECT COUNT(EmpId) / 2 FROM EmployeeInfo);</code></pre>
+
+  <p><b>Q: Find names that both start and end with "A".</b></p>
+  <pre><code>SELECT name FROM Employee WHERE name LIKE 'A%' AND name LIKE '%A';</code></pre>
+
+  <p><b>Q: Find employees who have no manager.</b></p>
+  <pre><code>SELECT * FROM Employee WHERE ManagerID IS NULL;</code></pre>
+
+  <p><b>Q: Get all records ordered by department ascending, then last name descending.</b></p>
+  <pre><code>SELECT * FROM EmployeeInfo ORDER BY Department ASC, EmpLname DESC;</code></pre>
+
+  <p><b>Q: Find records with matching ids across two different tables.</b></p>
+  <pre><code>SELECT * FROM EmployeeSalary
+WHERE EmpId IN (SELECT EmpId FROM ManagerSalary);</code></pre>
+
+  <p><b>Q: Get the first record and the last record, by id.</b></p>
+  <pre><code>SELECT * FROM EmployeeInfo WHERE EmpID = (SELECT MIN(EmpID) FROM EmployeeInfo);
+SELECT * FROM EmployeeInfo WHERE EmpID = (SELECT MAX(EmpID) FROM EmployeeInfo);</code></pre>
+
+  <p><b>Q: Find employees who also hold a managerial position.</b></p>
+  <pre><code>SELECT E.EmpFname, E.EmpLname, P.EmpPosition
+FROM EmployeeInfo E
+INNER JOIN EmployeePosition P ON E.EmpID = P.EmpID
+AND P.EmpPosition = 'Manager';</code></pre>
+
+  <p><b>Q: Get total salary paid out per position.</b></p>
+  <pre><code>SELECT EmpPosition, SUM(Salary) FROM EmployeePosition GROUP BY EmpPosition;</code></pre>
+
+  <p><b>Q: Get the top N highest paid employees.</b></p>
+  <pre><code>SELECT * FROM EmployeeInfo ORDER BY salary DESC LIMIT 5;</code></pre>
+
+  <p><b>Q: Return only the even-numbered rows, using a window function.</b></p>
+  <pre><code>SELECT customerId FROM (
+    SELECT ROW_NUMBER() OVER () AS rowno, customerId FROM customers
+) t
+WHERE MOD(rowno, 2) = 0;</code></pre>
+
+  <h2>Stored Procedure</h2>
+
+  <p><b>Q: Write a reusable stored procedure that inserts a new user given just a name.</b></p>
+  <pre><code>DELIMITER $$
+CREATE PROCEDURE AddUser(IN userName VARCHAR(100))
+BEGIN
+    INSERT INTO Users(name) VALUES(userName);
+END $$
+DELIMITER ;</code></pre>
+</div>

@@ -1,0 +1,19 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Tell me about a time you had to quickly adjust your priorities to meet changing demands.</h1>
+  <p>Behavioral question 5 of 20.</p>
+</div>
+  <div class="story-block">
+    <h3>Story 1: A performance issue jumping ahead of planned feature work</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> I was in the middle of building out new chat features when UAT testing showed that basic operations like sending, deleting, or reading a message were taking 30 to 60 seconds, which made the feature essentially unusable.</div>
+    <div class="star-row"><span class="star-label">Task:</span> I had to drop the feature work I was doing and treat this as the top priority, since a broken core experience is worse than a missing nice to have feature.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I switched into an investigation mode, using Hibernate's SQL logging and running EXPLAIN ANALYZE against a UAT sized dataset to find out where the time was actually going, instead of guessing. It turned out to be a combination of redundant queries across message, attachment, session, and participant lookups, not one single slow query, so no single index would have fixed it.</div>
+    <div class="star-row"><span class="star-label">Result:</span> I combined several separate database writes into single transactions, merged redundant lookups into joined queries, and moved some Kafka publishing calls off the main request thread using Async. That brought the operation time down from 30 to 60 seconds to under 2 to 3 seconds, and only after that was resolved did I go back to the feature work I had paused.</div>
+  </div>
+  <div class="story-block">
+    <h3>Story 2: Re-prioritizing after a payment status bug was reported</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A bug came in where appraisals that had already been paid for were still showing a status of Pending in the history table, even though the payment transaction id was clearly present on the record.</div>
+    <div class="star-row"><span class="star-label">Task:</span> This directly affected what customers saw about something they had paid for, so it needed to jump ahead of whatever else was scheduled that sprint.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I paused other backlog work, traced the status update logic, and found the code was unconditionally defaulting to Pending regardless of whether a payment transaction id existed, essentially a missing branch rather than a broken one. I updated that logic so it checks for the presence of a payment transaction id and sets the status to FormDataReady when that's the case, and made sure the check ran on the same row the payment write had just committed rather than a possibly stale read.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The status now reflects reality correctly, and because it was a small, well understood fix once diagnosed, I was able to get back to the originally planned priorities the same day.</div>
+  </div>

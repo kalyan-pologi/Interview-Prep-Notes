@@ -1,0 +1,411 @@
+<div class="section-header">
+  <div class="tag">Tooling</div>
+  <h1>📄 Java Code Snippets</h1>
+  <p>Reusable Java stream and collector snippets, question by question.</p>
+</div>
+
+<div class="note-body">
+  <p>Practical Stream API patterns worth having memorized cold for an interview, built around a
+    simple <code>Employee</code> model (id, name, department, salary, gender, joiningDate,
+    dateOfBirth).</p>
+
+  <h2>Imports & Model</h2>
+  <pre><code>import java.time.LocalDate;
+import java.time.Period;
+import java.util.*;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class Employee {
+    private final int id;
+    private final String firstName;
+    private final String lastName;
+    private final String gender;
+    private final String department;
+    private final double salary;
+    private final LocalDate joiningDate;
+    private final LocalDate dateOfBirth;
+    private final String email;
+
+    public Employee(int id, String firstName, String lastName, String gender,
+                     String department, double salary, LocalDate joiningDate,
+                     LocalDate dateOfBirth) {
+        this.id = id;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.gender = gender;
+        this.department = department;
+        this.salary = salary;
+        this.joiningDate = joiningDate;
+        this.dateOfBirth = dateOfBirth;
+        this.email = firstName.toLowerCase() + "." + lastName.toLowerCase() + "@company.com";
+    }
+
+    public int getId() { return id; }
+    public String getFirstName() { return firstName; }
+    public String getLastName() { return lastName; }
+    public String getFullName() { return firstName + " " + lastName; }
+    public String getGender() { return gender; }
+    public String getDepartment() { return department; }
+    public Double getSalary() { return salary; }
+    public LocalDate getJoiningDate() { return joiningDate; }
+    public LocalDate getDateOfBirth() { return dateOfBirth; }
+    public String getEmail() { return email; }
+
+    public int getAge() {
+        return Period.between(dateOfBirth, LocalDate.now()).getYears();
+    }
+
+    public int getYearsOfExperience() {
+        return Period.between(joiningDate, LocalDate.now()).getYears();
+    }
+
+    public String getAgeCategory() {
+        int age = getAge();
+        if (age < 30) return "Young";
+        else if (age <= 40) return "Middle";
+        else return "Senior";
+    }
+}
+
+// example data used throughout this page
+List&lt;Employee&gt; employees = Arrays.asList(
+    new Employee(1, "John", "Doe", "M", "IT", 6000,
+        LocalDate.of(2020, 1, 15), LocalDate.of(1990, 5, 20)),
+    new Employee(2, "Jane", "Smith", "F", "HR", 7500,
+        LocalDate.of(2019, 3, 10), LocalDate.of(1985, 8, 15))
+    // ...
+);
+List&lt;Integer&gt; numbers = Arrays.asList(1, 2, 3, 4, 5, 5, 6, 7, 8, 9, 7, 10);
+List&lt;String&gt; names = Arrays.asList("alice", "apple", "bob", "bat", "apple", "cat");</code></pre>
+
+  <h2>Filtering & Sorting</h2>
+
+  <p><b>Q: Get all IT employees, sorted by salary descending.</b></p>
+  <pre><code>employees.stream()
+    .filter(e -> e.getDepartment().equals("IT"))
+    .sorted(Comparator.comparing(Employee::getSalary).reversed())
+    .forEach(e -> System.out.println(e.getFullName() + ": " + e.getSalary()));</code></pre>
+
+  <p><b>Q: Get the top 2 highest paid employees.</b></p>
+  <pre><code>employees.stream()
+    .sorted(Comparator.comparingDouble(Employee::getSalary).reversed())
+    .limit(2)
+    .toList();</code></pre>
+
+  <p><b>Q: Sort by department, then age descending, then joining date, then salary descending,
+    then id, all in one pass.</b></p>
+  <pre><code>employees.stream()
+    .sorted(Comparator.comparing(Employee::getDepartment)
+        .thenComparing(Employee::getAge, Comparator.reverseOrder())
+        .thenComparing(Employee::getJoiningDate)
+        .thenComparing(Employee::getSalary, Comparator.reverseOrder())
+        .thenComparing(Employee::getId))
+    .forEach(System.out::println);</code></pre>
+
+  <p><b>Q: Filter out null values from a list before processing it.</b></p>
+  <pre><code>numbers.stream().filter(Objects::nonNull).forEach(System.out::println);</code></pre>
+
+  <h2>Matching & Finding</h2>
+
+  <p><b>Q: Check whether any employee earns over 10000.</b></p>
+  <pre><code>boolean anyOver10k = employees.stream().anyMatch(e -> e.getSalary() > 10000);</code></pre>
+
+  <p><b>Q: Check whether every IT employee earns over 4000.</b></p>
+  <pre><code>boolean allItOver4k = employees.stream()
+    .filter(e -> e.getDepartment().equals("IT"))
+    .allMatch(e -> e.getSalary() > 4000);</code></pre>
+
+  <p><b>Q: Find the first employee whose name starts with "A".</b></p>
+  <pre><code>Optional&lt;Employee&gt; firstA = employees.stream()
+    .filter(e -> e.getFirstName().startsWith("A"))
+    .findFirst();</code></pre>
+
+  <p><b>Q: Find the youngest employee.</b></p>
+  <pre><code>Employee youngest = employees.stream()
+    .max(Comparator.comparing(Employee::getDateOfBirth))
+    .orElseThrow();</code></pre>
+
+  <h2>Grouping</h2>
+
+  <p><b>Q: Group all employees by department.</b></p>
+  <pre><code>Map&lt;String, List&lt;Employee&gt;&gt; byDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment));</code></pre>
+
+  <p><b>Q: Get the average salary per department.</b></p>
+  <pre><code>Map&lt;String, Double&gt; avgSalaryByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment,
+        Collectors.averagingDouble(Employee::getSalary)));</code></pre>
+
+  <p><b>Q: Find the highest paid employee in each department.</b></p>
+  <pre><code>Map&lt;String, Optional&lt;Employee&gt;&gt; topPaidByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment,
+        Collectors.maxBy(Comparator.comparingDouble(Employee::getSalary))));</code></pre>
+
+  <p><b>Q: Group by department, then by age category within each department, with salary
+    statistics for each combination.</b></p>
+  <pre><code>Map&lt;String, Map&lt;String, DoubleSummaryStatistics&gt;&gt; deptAgeStats = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment,
+        Collectors.groupingBy(Employee::getAgeCategory,
+            Collectors.summarizingDouble(Employee::getSalary))));</code></pre>
+
+  <p><b>Q: List departments that have more than 2 employees.</b></p>
+  <pre><code>List&lt;String&gt; bigDepts = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment, Collectors.counting()))
+    .entrySet().stream()
+    .filter(e -> e.getValue() > 2)
+    .map(Map.Entry::getKey)
+    .toList();</code></pre>
+
+  <h2>Partitioning</h2>
+
+  <p><b>Q: Split a list of numbers into even and odd groups.</b></p>
+  <pre><code>Map&lt;Boolean, List&lt;Integer&gt;&gt; evenOdd = numbers.stream()
+    .collect(Collectors.partitioningBy(n -> n % 2 == 0));</code></pre>
+
+  <p><b>Q: Split employees into two groups by whether their salary is above or below 7500.</b></p>
+  <pre><code>Map&lt;Boolean, List&lt;Employee&gt;&gt; aboveBelow = employees.stream()
+    .collect(Collectors.partitioningBy(e -> e.getSalary() > 7500));</code></pre>
+
+  <h2>Counting Frequencies</h2>
+
+  <p><b>Q: Count how many times each name appears in a list.</b></p>
+  <pre><code>Map&lt;String, Long&gt; nameCounts = names.stream()
+    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));</code></pre>
+
+  <p><b>Q: Find only the numbers that appear more than once in a list.</b></p>
+  <pre><code>List&lt;Integer&gt; duplicates = numbers.stream()
+    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()))
+    .entrySet().stream()
+    .filter(e -> e.getValue() > 1)
+    .map(Map.Entry::getKey)
+    .toList();</code></pre>
+
+  <p><b>Q: Find the most frequently occurring character in a string.</b></p>
+  <pre><code>Map&lt;Character, Long&gt; charCounts = "banana".chars()
+    .mapToObj(c -> (char) c)
+    .collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+Map.Entry&lt;Character, Long&gt; mostFrequent = charCounts.entrySet().stream()
+    .max(Map.Entry.comparingByValue())
+    .orElseThrow();</code></pre>
+
+  <p><b>Q: Find the first non-repeating character in a string.</b></p>
+  <pre><code>// LinkedHashMap preserves insertion order so "first" stays meaningful
+Map&lt;Character, Long&gt; ordered = "swiss".chars()
+    .mapToObj(c -> (char) c)
+    .collect(Collectors.groupingBy(Function.identity(), LinkedHashMap::new, Collectors.counting()));
+Character firstUnique = ordered.entrySet().stream()
+    .filter(e -> e.getValue() == 1)
+    .map(Map.Entry::getKey)
+    .findFirst()
+    .orElseThrow();</code></pre>
+
+  <h2>Aggregation & Statistics</h2>
+
+  <p><b>Q: Calculate the total salary bill across all employees.</b></p>
+  <pre><code>double totalSalary = employees.stream()
+    .mapToDouble(Employee::getSalary)
+    .sum();</code></pre>
+
+  <p><b>Q: Calculate the average age of all employees.</b></p>
+  <pre><code>OptionalDouble avgAge = employees.stream()
+    .mapToInt(Employee::getAge)
+    .average();</code></pre>
+
+  <p><b>Q: Get min, max, and average age per department in one pass.</b></p>
+  <pre><code>Map&lt;String, IntSummaryStatistics&gt; ageStatsByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment,
+        Collectors.summarizingInt(Employee::getAge)));
+ageStatsByDept.forEach((dept, stats) ->
+    System.out.println(dept + ": avg=" + stats.getAverage()
+        + " min=" + stats.getMin() + " max=" + stats.getMax()));</code></pre>
+
+  <p><b>Q: Find the single department with the highest average salary.</b></p>
+  <pre><code>Optional&lt;Map.Entry&lt;String, Double&gt;&gt; topDept = avgSalaryByDept.entrySet().stream()
+    .max(Map.Entry.comparingByValue());</code></pre>
+
+  <h2>Mapping & Collecting to Map</h2>
+
+  <p><b>Q: Get the distinct list of department names.</b></p>
+  <pre><code>List&lt;String&gt; departments = employees.stream()
+    .map(Employee::getDepartment)
+    .distinct()
+    .toList();</code></pre>
+
+  <p><b>Q: Get every employee's full name uppercased and sorted alphabetically.</b></p>
+  <pre><code>List&lt;String&gt; upperNamesSorted = employees.stream()
+    .map(emp -> emp.getFullName().toUpperCase())
+    .sorted()
+    .toList();</code></pre>
+
+  <p><b>Q: Build a map of employee id to full name, without blowing up if two employees share an
+    id.</b></p>
+  <pre><code>Map&lt;Integer, String&gt; idToName = employees.stream()
+    .collect(Collectors.toMap(Employee::getId, Employee::getFullName, (a, b) -> a));</code></pre>
+
+  <h2>Excluding Extremes Within a Group</h2>
+
+  <p><b>Q: For each department, drop the highest and lowest paid employee before running any
+    further aggregation, so a single outlier doesn't skew the numbers.</b></p>
+  <pre><code>List&lt;Employee&gt; trimmed = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment))
+    .values().stream()
+    .flatMap(deptList -> {
+        if (deptList.size() <= 2) return Stream.empty();
+        return deptList.stream()
+            .sorted(Comparator.comparingDouble(Employee::getSalary))
+            .skip(1)
+            .limit(deptList.size() - 2);
+    })
+    .toList();</code></pre>
+
+  <h2>Cross-Referencing Within a Group</h2>
+
+  <p><b>Q: Find every pair of employees who share a first name but work in different departments,
+    and report the salary gap between each pair.</b></p>
+  <pre><code>Map&lt;String, List&lt;Employee&gt;&gt; byFirstName = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getFirstName));
+
+byFirstName.values().stream()
+    .filter(list -> list.size() > 1)
+    .forEach(list -> {
+        for (int i = 0; i < list.size(); i++) {
+            for (int j = i + 1; j < list.size(); j++) {
+                Employee e1 = list.get(i), e2 = list.get(j);
+                if (!e1.getDepartment().equals(e2.getDepartment())) {
+                    double diff = Math.abs(e1.getSalary() - e2.getSalary());
+                    System.out.printf("%s (%s) vs %s (%s), diff: %.2f%n",
+                        e1.getFullName(), e1.getDepartment(),
+                        e2.getFullName(), e2.getDepartment(), diff);
+                }
+            }
+        }
+    });</code></pre>
+
+  <h2>FlatMap & Transformations</h2>
+
+  <p><b>Q: Find first names that appear more than once across all employees.</b></p>
+  <pre><code>List&lt;String&gt; repeatedFirstNames = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getFirstName, Collectors.counting()))
+    .entrySet().stream()
+    .filter(e -> e.getValue() > 1)
+    .map(Map.Entry::getKey)
+    .toList();</code></pre>
+
+  <p><b>Q: Group names by their first letter.</b></p>
+  <pre><code>Map&lt;Character, List&lt;String&gt;&gt; byFirstLetter = names.stream()
+    .collect(Collectors.groupingBy(n -> Character.toUpperCase(n.charAt(0))));</code></pre>
+
+  <p><b>Q: Convert the employee list into a map of department to list of employee emails.</b></p>
+  <pre><code>Map&lt;String, List&lt;String&gt;&gt; emailsByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment,
+        Collectors.mapping(Employee::getEmail, Collectors.toList())));</code></pre>
+
+  <p><b>Q: Find all names that start with a vowel.</b></p>
+  <pre><code>List&lt;String&gt; vowelNames = names.stream()
+    .filter(n -> "aeiouAEIOU".indexOf(n.charAt(0)) >= 0)
+    .toList();</code></pre>
+
+  <h2>More Grouping & Aggregations</h2>
+
+  <p><b>Q: Find the department with the most employees.</b></p>
+  <pre><code>String biggestDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment, Collectors.counting()))
+    .entrySet().stream()
+    .max(Map.Entry.comparingByValue())
+    .map(Map.Entry::getKey)
+    .orElseThrow();</code></pre>
+
+  <p><b>Q: Get a map of department to total salary paid in that department.</b></p>
+  <pre><code>Map&lt;String, Double&gt; totalSalaryByDept = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment,
+        Collectors.summingDouble(Employee::getSalary)));</code></pre>
+
+  <p><b>Q: Count male and female employees using partitioningBy.</b></p>
+  <pre><code>Map&lt;Boolean, Long&gt; genderCounts = employees.stream()
+    .collect(Collectors.partitioningBy(e -> e.getGender().equals("M"), Collectors.counting()));
+long maleCount = genderCounts.get(true);
+long femaleCount = genderCounts.get(false);</code></pre>
+
+  <p><b>Q: Group employees by age category (Young/Middle/Senior).</b></p>
+  <pre><code>Map&lt;String, List&lt;Employee&gt;&gt; byAgeCategory = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getAgeCategory));</code></pre>
+
+  <p><b>Q: Find departments where the average salary is above 7000.</b></p>
+  <pre><code>List&lt;String&gt; highPayingDepts = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getDepartment,
+        Collectors.averagingDouble(Employee::getSalary)))
+    .entrySet().stream()
+    .filter(e -> e.getValue() > 7000)
+    .map(Map.Entry::getKey)
+    .toList();</code></pre>
+
+  <h2>Comparisons & Rankings</h2>
+
+  <p><b>Q: Find employees whose salary is above the overall average.</b></p>
+  <pre><code>double avgSalary = employees.stream().mapToDouble(Employee::getSalary).average().orElseThrow();
+List&lt;Employee&gt; aboveAverage = employees.stream()
+    .filter(e -> e.getSalary() > avgSalary)
+    .toList();</code></pre>
+
+  <p><b>Q: Find the second highest salary across all employees.</b></p>
+  <pre><code>Double secondHighest = employees.stream()
+    .map(Employee::getSalary)
+    .distinct()
+    .sorted(Comparator.reverseOrder())
+    .skip(1)
+    .findFirst()
+    .orElseThrow();</code></pre>
+
+  <p><b>Q: Find the employee with the longest full name.</b></p>
+  <pre><code>Employee longestName = employees.stream()
+    .max(Comparator.comparingInt(e -> e.getFullName().length()))
+    .orElseThrow();</code></pre>
+
+  <p><b>Q: Find the most common first name among employees.</b></p>
+  <pre><code>String mostCommonFirstName = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getFirstName, Collectors.counting()))
+    .entrySet().stream()
+    .max(Map.Entry.comparingByValue())
+    .map(Map.Entry::getKey)
+    .orElseThrow();</code></pre>
+
+  <p><b>Q: Group employees by years of experience.</b></p>
+  <pre><code>Map&lt;Integer, List&lt;Employee&gt;&gt; byExperience = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getYearsOfExperience));</code></pre>
+
+  <h2>String Operations</h2>
+
+  <p><b>Q: Get the longest name per starting letter.</b></p>
+  <pre><code>Map&lt;Character, String&gt; longestNamePerLetter = names.stream()
+    .collect(Collectors.groupingBy(
+        n -> Character.toUpperCase(n.charAt(0)),
+        Collectors.collectingAndThen(
+            Collectors.maxBy(Comparator.comparingInt(String::length)),
+            Optional::orElseThrow)));</code></pre>
+
+  <p><b>Q: Build a comma-separated string of all employee emails in the IT department.</b></p>
+  <pre><code>String itEmails = employees.stream()
+    .filter(e -> e.getDepartment().equals("IT"))
+    .map(Employee::getEmail)
+    .collect(Collectors.joining(", "));</code></pre>
+
+  <p><b>Q: Filter names longer than 4 characters and join them with a "|" separator.</b></p>
+  <pre><code>String joined = names.stream()
+    .filter(n -> n.length() > 4)
+    .collect(Collectors.joining("|"));</code></pre>
+
+  <h2>Advanced</h2>
+
+  <p><b>Q: Separate a list of numbers into even and odd, and sum each group.</b></p>
+  <pre><code>Map&lt;Boolean, Integer&gt; sumByParity = numbers.stream()
+    .collect(Collectors.partitioningBy(n -> n % 2 == 0,
+        Collectors.summingInt(Integer::intValue)));
+int evenSum = sumByParity.get(true);
+int oddSum = sumByParity.get(false);</code></pre>
+
+  <p><b>Q: Group employees who share the same first name.</b></p>
+  <pre><code>Map&lt;String, List&lt;Employee&gt;&gt; sameFirstName = employees.stream()
+    .collect(Collectors.groupingBy(Employee::getFirstName));</code></pre>
+</div>

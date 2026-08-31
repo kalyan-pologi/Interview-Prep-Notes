@@ -1,0 +1,290 @@
+<div class="section-header">
+  <div class="tag">Frontend</div>
+  <h1>⚛️ React</h1>
+  <p>React core concepts, quick reference.</p>
+</div>
+
+<div class="note-body">
+  <h2>Function vs. Class Components</h2>
+  <p><b>Function components</b> are the modern, recommended approach: simpler syntax, use Hooks
+    (<code>useState</code>, <code>useEffect</code>, etc.), no <code>this</code> keyword, easier to
+    read, test, and reuse logic.</p>
+  <p><b>Class components</b> are the older style: use lifecycle methods
+    (<code>componentDidMount</code>, <code>componentDidUpdate</code>,
+    <code>componentWillUnmount</code>), use <code>this.state</code> and
+    <code>this.setState()</code>, more boilerplate, rarely needed since Hooks landed in React
+    16.8.</p>
+
+  <figure class="note-figure">
+    <img src="assets/img/react-component-comparison-table.png" alt="React function vs class component comparison table">
+    <figcaption>Function vs. class components</figcaption>
+  </figure>
+
+  <h2>Components & JSX</h2>
+  <p>Components are reusable UI pieces that encapsulate structure, logic, and styling. JSX is the
+    HTML-like syntax extension used to describe what they render.</p>
+  <pre><code>function Welcome({ name }) {
+  return &lt;h1&gt;Hello, {name}!&lt;/h1&gt;;
+}
+
+// JSX: expressions, conditionals, attributes
+&lt;h1&gt;{user.name}&lt;/h1&gt;
+{isLoggedIn ? &lt;Dashboard /&gt; : &lt;Login /&gt;}
+&lt;img src={url} alt={title} /&gt;</code></pre>
+
+  <h2>Props</h2>
+  <p>Read-only data passed from a parent component down to a child.</p>
+  <pre><code>function Greeting({ name, age }) {
+  return &lt;p&gt;Hello {name}, you are {age}!&lt;/p&gt;;
+}
+
+&lt;Button text="Click me" color="blue" /&gt;
+&lt;SearchBar onSearch={handleSearch} /&gt;</code></pre>
+
+  <h2>State (useState)</h2>
+  <p>Mutable data that triggers a re-render when it changes.</p>
+  <pre><code>function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    &lt;&gt;
+      &lt;p&gt;Count: {count}&lt;/p&gt;
+      &lt;button onClick={() => setCount(count + 1)}&gt;+&lt;/button&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+
+  <h2>useEffect</h2>
+  <p>Handles side effects, data fetching, subscriptions, timers, cleanup.</p>
+  <pre><code>function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    fetch(`/api/users/${userId}`)
+      .then(res => res.json())
+      .then(data => setUser(data));
+  }, [userId]);
+
+  return &lt;div&gt;{user?.name}&lt;/div&gt;;
+}</code></pre>
+
+  <h2>Conditional Rendering & Lists</h2>
+  <pre><code>{loading ? &lt;Spinner /&gt; : &lt;Content /&gt;}
+{isLoggedIn && &lt;Dashboard /&gt;}
+
+function TodoList({ todos }) {
+  return (
+    &lt;ul&gt;
+      {todos.map(todo => (
+        &lt;li key={todo.id}&gt;{todo.text}&lt;/li&gt;
+      ))}
+    &lt;/ul&gt;
+  );
+}</code></pre>
+
+  <h2>Forms & Controlled Components</h2>
+  <pre><code>function LoginForm() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    // handle login
+  };
+
+  return (
+    &lt;form onSubmit={handleSubmit}&gt;
+      &lt;input value={email} onChange={e => setEmail(e.target.value)} /&gt;
+      &lt;input type="password" value={password}
+        onChange={e => setPassword(e.target.value)} /&gt;
+      &lt;button type="submit"&gt;Login&lt;/button&gt;
+    &lt;/form&gt;
+  );
+}</code></pre>
+
+  <h2>useContext</h2>
+  <p>Shares data across components without passing props down through every intermediate level
+    (prop drilling).</p>
+  <pre><code>const ThemeContext = createContext();
+
+function App() {
+  const [theme, setTheme] = useState('light');
+  return (
+    &lt;ThemeContext.Provider value={{ theme, setTheme }}&gt;
+      &lt;Header /&gt;
+      &lt;Content /&gt;
+    &lt;/ThemeContext.Provider&gt;
+  );
+}
+
+function Header() {
+  const { theme, setTheme } = useContext(ThemeContext);
+  return &lt;button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}&gt;
+    Toggle Theme
+  &lt;/button&gt;;
+}</code></pre>
+
+  <h2>Custom Hooks</h2>
+  <p>Reusable functions that extract stateful component logic so it can be shared.</p>
+  <pre><code>function useFetch(url) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        setData(data);
+        setLoading(false);
+      });
+  }, [url]);
+
+  return { data, loading };
+}</code></pre>
+
+  <h2>React Router</h2>
+  <pre><code>import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
+
+function App() {
+  return (
+    &lt;BrowserRouter&gt;
+      &lt;nav&gt;
+        &lt;Link to="/"&gt;Home&lt;/Link&gt;
+        &lt;Link to="/about"&gt;About&lt;/Link&gt;
+      &lt;/nav&gt;
+      &lt;Routes&gt;
+        &lt;Route path="/" element={&lt;Home /&gt;} /&gt;
+        &lt;Route path="/about" element={&lt;About /&gt;} /&gt;
+        &lt;Route path="/users/:id" element={&lt;UserProfile /&gt;} /&gt;
+      &lt;/Routes&gt;
+    &lt;/BrowserRouter&gt;
+  );
+}</code></pre>
+
+  <h2>useMemo, useCallback, useReducer</h2>
+  <p><code>useMemo</code> memoizes a computed value, <code>useCallback</code> memoizes a function
+    reference, both exist purely to avoid unnecessary recalculation or re-renders in child
+    components. <code>useReducer</code> is a useState alternative for complex state logic, where
+    the next state depends on the previous state or involves multiple sub-values.</p>
+  <pre><code>function reducer(state, action) {
+  switch (action.type) {
+    case 'increment': return { count: state.count + 1 };
+    case 'decrement': return { count: state.count - 1 };
+    default: return state;
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(reducer, { count: 0 });
+  return (
+    &lt;&gt;
+      &lt;p&gt;Count: {state.count}&lt;/p&gt;
+      &lt;button onClick={() => dispatch({ type: 'increment' })}&gt;+&lt;/button&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+
+  <h2>useRef</h2>
+  <p>Accesses DOM elements directly, or stores a mutable value that persists between renders
+    without triggering a re-render when it changes. Common uses: focusing an input, integrating a
+    third-party library, storing a previous value for comparison.</p>
+  <pre><code>function TextInput() {
+  const inputRef = useRef(null);
+  const countRef = useRef(0);
+
+  const focusInput = () => { inputRef.current.focus(); };
+
+  useEffect(() => {
+    countRef.current += 1; // does not trigger re-render
+  });
+
+  return (
+    &lt;&gt;
+      &lt;input ref={inputRef} /&gt;
+      &lt;button onClick={focusInput}&gt;Focus&lt;/button&gt;
+    &lt;/&gt;
+  );
+}</code></pre>
+
+  <h2>Rules of Hooks</h2>
+  <ol>
+    <li><b>Top level only</b>, never call hooks inside loops, conditions, or nested functions</li>
+    <li><b>React functions only</b>, only call hooks from React components or custom hooks</li>
+    <li><b>Consistent order</b>, hooks must run in the same order every render for React to track
+      state correctly</li>
+  </ol>
+  <pre><code>// Wrong
+if (condition) {
+  useState(0); // conditional hook call
+}
+
+// Correct
+const [count, setCount] = useState(0);
+if (condition) {
+  setCount(1); // use the hook's result conditionally, not the hook call itself
+}</code></pre>
+
+  <h2>Node vs. Element vs. Component</h2>
+  <ul>
+    <li><b>React Node</b>, anything renderable, a string, number, element, array, null, or
+      boolean</li>
+    <li><b>React Element</b>, a plain JavaScript object describing what should appear on screen,
+      created by JSX or <code>React.createElement</code></li>
+    <li><b>React Component</b>, a function or class that returns React elements, the reusable
+      building block</li>
+  </ul>
+
+  <h2>State Mutation Problems</h2>
+  <p>React compares state using reference equality (<code>Object.is</code>). Mutating an object
+    in place keeps the same reference, so React thinks nothing changed and skips the re-render,
+    leaving the UI stale. Always create a new object or array reference instead.</p>
+  <pre><code>// Wrong, mutates in place
+const handleUpdate = () => {
+  user.name = 'John';
+  setUser(user); // same reference, no re-render
+};
+
+// Correct, new reference
+const handleUpdate = () => {
+  setUser({ ...user, name: 'John' });
+};
+
+setItems([...items.slice(0, index), updatedItem, ...items.slice(index + 1)]);</code></pre>
+
+  <h2>Reconciliation & Keys</h2>
+  <p>React diffs the new virtual DOM tree against the previous one to find the minimal set of
+    real DOM changes. Same element type at the same position preserves the component instance
+    and its state, a different type tears it down and creates a new one. Keys let React match
+    list items across renders so reordering or removing an item does not re-render the entire
+    list.</p>
+  <pre><code>// without keys, inefficient
+{items.map(item => &lt;Item data={item} /&gt;)}
+
+// with keys, efficient
+{items.map(item => &lt;Item key={item.id} data={item} /&gt;)}</code></pre>
+
+  <h2>Higher-Order Components</h2>
+  <p>A function that takes a component and returns an enhanced version with additional props or
+    behavior. Common uses: authentication gating, logging, data fetching, theme injection.</p>
+  <pre><code>const withAuth = (Component) => (props) => {
+  const { isAuthenticated } = useAuth();
+  return isAuthenticated ? &lt;Component {...props} /&gt; : &lt;Login /&gt;;
+};
+
+const ProtectedDashboard = withAuth(Dashboard);</code></pre>
+
+  <h2>Performance Optimization</h2>
+  <ul>
+    <li><b>Memoization</b>, <code>React.memo</code>, <code>useMemo</code>,
+      <code>useCallback</code> to skip unnecessary re-renders and recalculations</li>
+    <li><b>Code splitting</b>, dynamic imports with <code>React.lazy</code> and
+      <code>Suspense</code>, splits the bundle into smaller chunks so the browser only loads what
+      the current route or view actually needs</li>
+    <li><b>Bundle optimization</b>, tree shaking, watching bundle size, avoiding unnecessarily
+      large dependencies</li>
+  </ul>
+
+  <figure class="note-figure">
+    <img src="assets/img/angular-vs-react-comparison-table.png" alt="Angular vs React comparison table">
+    <figcaption>Angular vs. React comparison</figcaption>
+  </figure>
+</div>
