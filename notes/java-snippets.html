@@ -13,6 +13,8 @@
   <pre><code>import java.time.LocalDate;
 import java.time.Period;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -225,6 +227,11 @@ ageStatsByDept.forEach((dept, stats) ->
   <pre><code>Optional&lt;Map.Entry&lt;String, Double&gt;&gt; topDept = avgSalaryByDept.entrySet().stream()
     .max(Map.Entry.comparingByValue());</code></pre>
 
+  <p><b>Q: Get min, max, average, and count statistics for the lengths of a list of strings in one
+    pass.</b></p>
+  <pre><code>IntSummaryStatistics stats = names.stream()
+    .collect(Collectors.summarizingInt(String::length));</code></pre>
+
   <h2>Mapping & Collecting to Map</h2>
 
   <p><b>Q: Get the distinct list of department names.</b></p>
@@ -408,4 +415,88 @@ int oddSum = sumByParity.get(false);</code></pre>
   <p><b>Q: Group employees who share the same first name.</b></p>
   <pre><code>Map&lt;String, List&lt;Employee&gt;&gt; sameFirstName = employees.stream()
     .collect(Collectors.groupingBy(Employee::getFirstName));</code></pre>
+
+  <h2>CompletableFuture</h2>
+  <p>The core methods for composing async work without blocking, worth knowing individually since
+    interviews often ask "what's the difference between X and Y" for pairs like
+    <code>thenApply</code>/<code>thenApplyAsync</code> or <code>thenCombine</code>/<code>thenCompose</code>.</p>
+
+  <p><b>Q: Run a task asynchronously and get its result later.</b></p>
+  <pre><code>CompletableFuture&lt;String&gt; future = CompletableFuture.supplyAsync(() -> {
+    sleep(1);
+    return "Hello";
+});</code></pre>
+
+  <p><b>Q: Transform a future's result once it's available (thenApply runs on the same thread that
+    completed the future, thenApplyAsync forces it onto a different thread from the pool).</b></p>
+  <pre><code>CompletableFuture&lt;String&gt; transformed = future.thenApply(result -> result + " World");
+
+transformed.thenApplyAsync(data -> {
+    sleep(1);
+    return data.toUpperCase();
+}).thenAccept(result -> System.out.println("thenApplyAsync: " + result));</code></pre>
+
+  <p><b>Q: Consume a future's result without returning anything.</b></p>
+  <pre><code>transformed.thenAccept(result -> System.out.println("thenAccept: " + result));</code></pre>
+
+  <p><b>Q: Run a follow-up action after a future completes, without needing its result.</b></p>
+  <pre><code>transformed.thenRun(() -> System.out.println("thenRun: Task completed"));</code></pre>
+
+  <p><b>Q: Combine the results of two independent futures once both are done.</b></p>
+  <pre><code>CompletableFuture&lt;String&gt; greeting = CompletableFuture.supplyAsync(() -> "Hi");
+CompletableFuture&lt;String&gt; name = CompletableFuture.supplyAsync(() -> "Shiva");
+
+greeting.thenCombine(name, (g, n) -> g + ", " + n + "!")
+    .thenAccept(result -> System.out.println("thenCombine: " + result));</code></pre>
+
+  <p><b>Q: Chain one async call that depends on the result of a previous one (thenCompose
+    flattens a future-of-a-future, thenApply would leave you with a nested one).</b></p>
+  <pre><code>CompletableFuture&lt;String&gt; chained = greeting.thenCompose(g ->
+    CompletableFuture.supplyAsync(() -> g + " again"));
+chained.thenAccept(result -> System.out.println("thenCompose: " + result));</code></pre>
+
+  <p><b>Q: Recover from an exception with a fallback value.</b></p>
+  <pre><code>CompletableFuture&lt;String&gt; errorHandled = CompletableFuture.supplyAsync(() -> {
+    throw new RuntimeException("Oops!");
+}).exceptionally(ex -> {
+    System.out.println("exceptionally: " + ex.getMessage());
+    return "Fallback";
+});</code></pre>
+
+  <p><b>Q: Handle both the success and failure case together in one callback (unlike
+    exceptionally, handle always runs, even on success).</b></p>
+  <pre><code>CompletableFuture&lt;String&gt; handled = CompletableFuture.supplyAsync(() -> {
+    throw new RuntimeException("Another Error");
+}).handle((result, ex) -> {
+    if (ex != null) return "Handled error";
+    return result;
+});</code></pre>
+
+  <p><b>Q: Run a side effect regardless of whether the future succeeded or failed, without
+    changing its result.</b></p>
+  <pre><code>CompletableFuture.supplyAsync(() -> "Done")
+    .whenComplete((res, ex) -> {
+        if (ex == null) System.out.println("whenComplete: " + res);
+    });</code></pre>
+
+  <p><b>Q: Wait for several futures to all finish before continuing.</b></p>
+  <pre><code>CompletableFuture&lt;Void&gt; all = CompletableFuture.allOf(greeting, name, transformed);
+all.thenRun(() -> System.out.println("allOf: All tasks done"));</code></pre>
+
+  <p><b>Q: Continue as soon as the first of several futures finishes, ignoring the rest.</b></p>
+  <pre><code>CompletableFuture&lt;Object&gt; any = CompletableFuture.anyOf(
+    CompletableFuture.supplyAsync(() -> "First"),
+    CompletableFuture.supplyAsync(() -> { sleep(1); return "Second"; })
+);
+any.thenAccept(result -> System.out.println("anyOf: " + result));</code></pre>
+
+  <p><b>Q: Block and get a future's result without dealing with a checked exception.</b></p>
+  <pre><code>String result = transformed.join(); // like .get(), but throws unchecked on failure</code></pre>
+
+  <p><b>Q: Utility to simulate a slow task, used by the examples above.</b></p>
+  <pre><code>private static void sleep(int seconds) {
+    try {
+        TimeUnit.SECONDS.sleep(seconds);
+    } catch (InterruptedException ignored) {}
+}</code></pre>
 </div>
