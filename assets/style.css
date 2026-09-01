@@ -376,6 +376,51 @@ body {
   margin-right: 6px;
 }
 
+/* Follow-up Q&A block (behavioral notes) */
+.followup-block {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: var(--card-radius);
+  padding: 14px 18px;
+  margin: -6px 0 16px;
+}
+
+.followup-block h4 {
+  margin: 0 0 10px;
+  font-size: 12px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  color: var(--muted);
+}
+
+.followup-item {
+  margin-bottom: 12px;
+}
+
+.followup-item:last-child {
+  margin-bottom: 0;
+}
+
+.followup-item .fq {
+  font-size: 14px;
+  font-weight: 600;
+  color: #f1f5f9;
+  line-height: 1.6;
+  margin-bottom: 4px;
+}
+
+.followup-item .fa {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #94a3b8;
+}
+
+.followup-block li:last-child {
+  margin-bottom: 0;
+}
+
 /* Figures / diagrams inside a note */
 .note-figure {
   margin: 16px 0;
