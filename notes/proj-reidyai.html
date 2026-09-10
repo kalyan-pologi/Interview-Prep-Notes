@@ -5,26 +5,35 @@
 </div>
 
 <div class="note-body">
-  <p>Reidy is a real estate platform connecting brokers, lenders, transaction coordinators, and
-    buyers around property deals and property data, everything from tracking a transaction end to
-    end, to real time communication between the parties involved, to automatically generating
-    property appraisals and investment analysis reports. A lot of what I built touches paid
-    transactions and production data other teams rely on, so reliability and data correctness has
-    been a constant theme across the work.</p>
 
-  <h2>Appraisal Engines (Residential, Commercial, Land)</h2>
-  <p>The core of the platform is a set of appraisal services that value a property automatically
-    from an address. The residential engine reads property and MLS data from parquet datasets on
-    Azure Data Lake, builds a pool of comparable properties using geographic and feature
-    filtering, then runs a KNN-based comp selection with per-feature dollar adjustments (beds,
-    baths, pool, garage, fireplace, gross area, year built, condition). The selected comps are
-    split into an As-Is group and an ARV group, then combined with an inverse-distance-weighted
-    valuation, falling back to an unweighted mean when there is not enough spread in the data. A
-    rehab cost range is derived from reconstruction cost and a condition-based fraction with a
-    plus/minus band. The commercial engine works differently since it is backed by Azure SQL
-    rather than parquet, and runs a multi-agent pipeline where separate agents produce the sales,
-    cost, and income approaches, and a reconciliation agent combines them with weighted approach
-    scores.</p>
+  <h2>Short Version (say this first)</h2>
+  <p>Reidy is a real estate platform that connects brokers, lenders, transaction coordinators, and
+    buyers around property deals, covering everything from tracking a transaction end to end, to
+    real time communication between the parties, to automatically generating property appraisals
+    and investment analysis reports. Since a lot of it touches paid transactions and production
+    data other teams rely on, reliability and data correctness have been a constant theme across
+    everything I've built there.</p>
+  <p>On the appraisal side, I designed and built a dual persistence architecture in Java and Spring
+    Boot. The platform needed two different ways of handling appraisal data, a paid permanent
+    history record that gets billed, and a free reusable cache for browsing that shouldn't be
+    recomputed or recharged on every view. These two write paths could never share a code path, so
+    I enforced that separation at the module level using two separate Spring Boot starter
+    libraries. I also reconciled two structurally different valuation engines into a single shared
+    schema using a normalizer, and extracted the core valuation logic into a shared service so both
+    flows could reuse it without changing the paid endpoint's behavior at all, which I verified
+    with before and after comparison tests since that endpoint was billing relevant.</p>
+  <p>I also built a real time chat and notifications system from scratch on Spring Boot, the data
+    model, the messaging domain logic, and the real time transport layer, using WebSocket and
+    Kafka, so notifications dispatched asynchronously never blocked a core action like sending a
+    message. I owned that system end to end, including a performance investigation that brought
+    core chat operations from 30 to 60 seconds down to under 2 to 3 seconds.</p>
+  <p>Separately, I built a caching layer over a third party real estate data API using Spring
+    WebFlux, since a single report required around 20 outbound calls, many of them for data that
+    gets reused across different properties. I designed it as a decorator wrapping one shared
+    transport interface, so it covered all 20 endpoints without touching any individual call site,
+    which cut redundant external calls down to zero for repeat property lookups.</p>
+
+  <hr>
 
   <h2>Appraisal History vs. Property Cache</h2>
   <p>One of the more interesting problems I worked on was that an appraisal can get saved to
@@ -82,18 +91,50 @@
     just not calling it. It was a good reminder to think about failure of infrastructure you own,
     not just failure of systems you call into.</p>
 
-  <h2>DuckDB Memory Tuning</h2>
-  <p>Part of the data pipeline uses DuckDB for fast local analytical queries over parquet data.
-    Under production load we started seeing memory pressure and instability, so I worked on
-    tuning DuckDB's memory limit configuration and adding logging around query execution to
-    understand actual memory usage patterns before and after tuning, rather than guessing at a
-    number. This kept the service stable without over-provisioning memory that would otherwise sit
-    idle most of the time.</p>
-
   <h2>CashFlowMW</h2>
   <p>CashFlowMW is a related service focused on cash flow and investment analysis for real estate
     deals, sharing infrastructure patterns with the main Reidy platform, including the same
     emphasis on getting cached, third-party-sourced financial data right and consistent across
     requests. Work here overlapped heavily with the caching and data correctness themes above,
     since the investment analysis reports pull from the same categories of external data sources.</p>
+
+  <hr>
+
+  <h2>Reference: How the Valuation Engines Work Internally</h2>
+  <blockquote>Background context only. This is the valuation logic the appraisal services run,
+    not something I owned, but useful if an interviewer digs into what the system actually
+    computes.</blockquote>
+
+  <div class="story-block">
+    <h3>Residential Engine</h3>
+    <p>Reads property and MLS data from parquet datasets on Azure Data Lake. Builds a pool of
+      comparable properties using geographic and feature filtering (radius, beds, baths, sqft,
+      sale date), then runs a KNN-based comp selection with per-feature dollar adjustments for
+      beds, baths, pool, garage, fireplace, gross area, year built, and condition.</p>
+    <p>The selected comps are split into an As-Is group and an ARV (after repair value) group to
+      guarantee a spread between the two numbers, then combined using an inverse-distance-weighted
+      valuation, falling back to an unweighted mean when there isn't enough spread in the data. A
+      rehab cost range is derived from reconstruction cost times a condition-based fraction, with
+      a plus/minus band around it.</p>
+  </div>
+
+  <div class="story-block">
+    <h3>Commercial Engine</h3>
+    <p>Backed by SQL rather than parquet, and structured as a multi-agent pipeline instead of a
+      single calculation. Separate agents each produce one section of the appraisal: a sales
+      approach (comps with percentage-based adjustments), a cost approach (replacement cost and
+      depreciation), and an income approach (NOI and cap rate, which has no residential
+      equivalent). A reconciliation agent then combines the three into a final value using
+      weighted approach scores.</p>
+  </div>
+
+  <div class="story-block">
+    <h3>Why This Mattered for the Persistence Work</h3>
+    <p>The two engines produce structurally different output. Residential returns per-feature
+      dollar adjustments; commercial returns percentage adjustments by category and has no
+      equivalent for several residential fields. Reconciling them into one shared schema meant
+      writing a normalizer that converts commercial percentages to dollars at write time and
+      leaves engine-specific columns null, rather than maintaining two separate table shapes.</p>
+  </div>
+
 </div>
