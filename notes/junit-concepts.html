@@ -117,4 +117,49 @@ mvn test -Dgroups=unit      # Run tagged tests
     <img src="assets/img/junit-mockito-annotations-cheat-sheet.png" alt="JUnit and Mockito annotations cheat sheet">
     <figcaption>JUnit & Mockito annotations cheat sheet</figcaption>
   </figure>
+
+  <hr>
+
+  <h2>From My Own Work</h2>
+
+  <div class="story-block">
+    <h3>1. Byte-for-byte before/after comparison tests on a billing-relevant refactor</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> I was extracting core valuation logic out of a paid appraisal endpoint into a shared service so a new free cache flow could reuse it, and the endpoint was billing relevant.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Prove the refactor didn't change the endpoint's behavior at all, not just assume it based on reading the diff.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I wrote comparison tests that ran the exact same request against the old and new code paths and asserted the responses matched byte for byte, running against the real Spring context rather than a mocked service, since a mock would hide a subtle wiring bug from the extraction.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The refactor shipped with real confidence the billing-relevant endpoint's behavior was completely unchanged, which a unit test on the extracted method alone wouldn't have proven.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>2. @Container + @DynamicPropertySource to catch real SQL Server behavior H2 missed</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Repository tests ran against in-memory H2, but I needed to verify behavior specific to real SQL Server, unique constraint upserts and cascading deletes.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Get tests running against a real database engine without slowing the whole suite down per test.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I declared the container as a static field annotated @Container so it starts once and is shared across the test class, and used @DynamicPropertySource to inject its connection details before the Spring context boots.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The tests caught real constraint and cascade behavior H2 would have silently handled differently, which is exactly the gap Testcontainers exists to close.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>3. Recognizing what a mock hides during an extraction refactor</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> While verifying a service extraction, the fast path would have been to unit test the extracted method in isolation with its dependencies mocked.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Decide whether that isolated test actually proved the extraction was safe.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I insisted the comparison tests run against the real Spring context instead, since a mock only verifies the caller's code path against an assumed interface, it wouldn't catch a subtle bug in how the extracted service itself gets wired or its dependencies injected.</div>
+    <div class="star-row"><span class="star-label">Result:</span> That distinction, unit testing logic versus integration testing wiring, is exactly the kind of gap a refactor is most likely to introduce and a pure mock-based test is least likely to catch.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>4. A test gap that would have caught a missing-branch bug earlier</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A payment status update defaulted to Pending regardless of whether a payment transaction id existed, a missing branch rather than a broken one, and it shipped without being caught.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Identify what test coverage would have caught this before it reached production.</div>
+    <div class="star-row"><span class="star-label">Action:</span> After fixing the bug, I added a test asserting the correct status for every known payment state, not just the happy path, so a default-only implementation fails a test immediately instead of only surfacing once real paid records hit it.</div>
+    <div class="star-row"><span class="star-label">Result:</span> It reinforced testing every explicit branch a status or state machine can be in, not just the primary path, since a missing else-branch produces no compile error and no obvious symptom until real data exercises it.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>5. A cache key collision test that verifies uniqueness across parameters</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A cache key generator initially left out a secondary parameter some endpoints accepted, causing two different requests to collide on the same key and return wrong cached data.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Prevent the same class of bug from recurring on a future endpoint with a different overlooked parameter.</div>
+    <div class="star-row"><span class="star-label">Action:</span> After rebuilding the key generator to derive keys programmatically from every parameter reaching the call, I added a test that calls the same endpoint with two different values for every documented parameter and asserts the cache keys differ.</div>
+    <div class="star-row"><span class="star-label">Result:</span> This kind of test catches a missing parameter automatically instead of relying on someone noticing wrong-looking cached data days or weeks later.</div>
+  </div>
+
 </div>

@@ -123,4 +123,49 @@ kubectl logs -f &lt;pod_name&gt; -n microservices  # View live app logs
 kubectl get ingress -n microservices     # Verify ingress rules
 minikube tunnel                          # Enable Ingress routing (keep running)
 kubectl delete -f k8s/                   # Tear down everything</code></pre>
+
+  <hr>
+
+  <h2>From My Own Work (Docker &amp; Kubernetes)</h2>
+
+  <div class="story-block">
+    <h3>1. A multi-instance failure that was really an orchestration/routing problem</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Our real time messaging service had intermittent connection failures under multi-instance load, root-caused to sticky session cookies not surviving a hop through our content delivery layer.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Fix a problem that was fundamentally about how requests get routed across multiple running instances, not a single-instance bug.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I proposed migrating to a managed relay so no client needed to stay pinned to one instance, since sticky sessions only reduce the odds of hitting the wrong instance, they don't remove the requirement for affinity in the first place.</div>
+    <div class="star-row"><span class="star-label">Result:</span> This is the same class of problem Kubernetes Services and load balancing are designed to solve architecturally, treating pods as interchangeable rather than requiring client affinity to a specific instance.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>2. Why a config flag couldn't rely on the container just not calling a dependency</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A cache feature's flag only gated behavior, not bean creation, so the DataSource was still built eagerly on container startup and could crash-loop the whole application on a bad connection string.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Make the flag genuinely remove the dependency so a bad config value couldn't take down the container.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I used @ConditionalOnProperty so the bean is only created when the flag is true, which matters specifically in a containerized deployment where a failed startup means a failed readiness probe and the orchestrator repeatedly restarting a container that will never come up healthy.</div>
+    <div class="star-row"><span class="star-label">Result:</span> It reinforced thinking about failure of infrastructure a container depends on, since a crash loop from a bad optional dependency looks identical to a real outage from the orchestrator's point of view.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>3. Externalizing configuration instead of baking it into the image</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Services needed different configuration (connection strings, feature flags, storage account names) across dev, UAT, and prod, and one specific bug came from a storage account name being wrong for the environment it ran in.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Make configuration environment-specific without building a separate image per environment.</div>
+    <div class="star-row"><span class="star-label">Action:</span> Configuration was externalized via Spring profiles and environment variables rather than hardcoded, the same pattern Kubernetes ConfigMaps and Secrets exist to support, one image, config injected at deploy time per environment.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The actual bug still came from a wrong config value, which reinforced that externalizing config solves portability, it doesn't remove the need to get the value itself right per environment.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>4. Designing a service to be safely restarted or scaled without losing state</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Presence tracking initially lived in one application instance's memory, which gave inconsistent results once multiple instances were running behind a load balancer.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Make the service's behavior correct regardless of which instance, or how many instances, handled a given request.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I moved presence into a shared Redis-backed service instead of per-instance memory, so any instance reads the same source of truth, which is exactly the statelessness assumption Kubernetes deployments and horizontal scaling depend on.</div>
+    <div class="star-row"><span class="star-label">Result:</span> A pod being killed, restarted, or scaled out should never change correctness, and this fix was what actually made that true for presence data.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>5. Docker for consistent local development and CI builds</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Spring Boot services needed to build and run identically across a developer's machine, CI, and deployment targets, and integration tests needed a real database rather than an approximation.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Remove "works on my machine" as a category of problem for both running the service and testing it.</div>
+    <div class="star-row"><span class="star-label">Action:</span> Services were packaged as Docker images built from the same Dockerfile used in CI, and integration tests used Testcontainers to spin up a real SQL Server instance in a container rather than relying on an in-memory substitute like H2.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The same containerization that makes deployment portable also made testing more honest, since the database in the test container behaved the same as the one in production.</div>
+  </div>
+
 </div>

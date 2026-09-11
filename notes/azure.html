@@ -1,0 +1,369 @@
+<div class="section-header">
+  <div class="tag">DevOps</div>
+  <h1>☁️ Azure</h1>
+  <p>Core services, CLI commands, and interview questions.</p>
+</div>
+
+<div class="note-body">
+
+  <h2>Services I actually use</h2>
+  <pre><code>App Service           →  managed PaaS hosting for Spring Boot services
+Azure SQL             →  managed relational database (SQL Server engine)
+Blob Storage          →  object storage for PDFs, reports, documents
+Event Hubs            →  high-throughput event streaming (Kafka-compatible)
+Service Bus           →  enterprise message broker (queues, topics, DLQ)
+Key Vault             →  secrets, keys, certificates
+Application Insights  →  APM, distributed tracing, custom telemetry
+Entra ID (Azure AD)   →  identity, OAuth2 / OIDC, managed identities
+AKS                   →  managed Kubernetes
+Azure DevOps          →  pipelines, repos, boards</code></pre>
+
+  <h2>Resource hierarchy</h2>
+  <pre><code>Management Group  →  groups subscriptions, applies policy at scale
+  Subscription    →  billing + access boundary
+    Resource Group →  lifecycle container (deploy/delete together)
+      Resource     →  the actual service instance
+
+Resources in a group can span regions, but the group itself has a
+home region that stores its metadata.</code></pre>
+
+  <h2>Azure CLI essentials</h2>
+  <pre><code>az login                                      # interactive login
+az account show                               # current subscription
+az account set --subscription "&lt;name-or-id&gt;"  # switch subscription
+az group create -n rg-app -l eastus           # create resource group
+az group delete -n rg-app --yes               # delete group + everything in it
+az resource list -g rg-app -o table           # list resources in a group</code></pre>
+
+  <h2>App Service</h2>
+  <pre><code>az webapp up -n my-api -g rg-app --runtime "JAVA:17-java17"
+az webapp deploy -g rg-app -n my-api --src-path target/app.jar --type jar
+
+az webapp config appsettings set -g rg-app -n my-api \
+    --settings SPRING_PROFILES_ACTIVE=prod DB_HOST=...
+
+az webapp log tail -g rg-app -n my-api        # stream live logs
+az webapp restart -g rg-app -n my-api
+az webapp deployment slot create -g rg-app -n my-api --slot staging
+az webapp deployment slot swap  -g rg-app -n my-api --slot staging</code></pre>
+  <blockquote><b>Deployment slots</b> give you zero-downtime releases: deploy to
+    <code>staging</code>, let it warm up, then swap. The swap is a routing change, not a
+    redeploy, and can be swapped back instantly if something breaks.</blockquote>
+
+  <h2>Blob Storage</h2>
+  <pre><code>Account  →  Container  →  Blob
+
+Tiers    Hot      → frequent access, highest storage cost, lowest access cost
+         Cool     → infrequent (30+ days), lower storage, higher access cost
+         Cold     → rarely accessed (90+ days)
+         Archive  → offline, hours to rehydrate, cheapest
+
+Types    Block    → files, documents, most common
+         Append   → logging, append-only writes
+         Page     → random read/write, VM disks</code></pre>
+  <pre><code>az storage blob upload -c reports -f report.pdf -n 2026/report.pdf \
+    --account-name mystorage
+az storage blob list -c reports --account-name mystorage -o table
+az storage blob generate-sas -c reports -n report.pdf \
+    --permissions r --expiry 2026-12-31 --account-name mystorage</code></pre>
+
+  <h2>Application Insights (Spring Boot)</h2>
+  <pre><code>// Attach the agent at startup, no code changes needed
+java -javaagent:applicationinsights-agent.jar -jar app.jar
+
+// applicationinsights.json
+{
+  "connectionString": "InstrumentationKey=...;IngestionEndpoint=...",
+  "sampling": { "percentage": 100 },
+  "instrumentation": { "logging": { "level": "INFO" } }
+}</code></pre>
+  <pre><code>// KQL: slowest endpoints in the last hour
+requests
+| where timestamp &gt; ago(1h)
+| summarize p95 = percentile(duration, 95), count() by name
+| order by p95 desc
+
+// KQL: failures grouped by result code
+requests
+| where success == false and timestamp &gt; ago(24h)
+| summarize count() by resultCode, name
+| order by count_ desc</code></pre>
+
+  <h2>Key Vault + Managed Identity</h2>
+  <pre><code>az keyvault create -n kv-app -g rg-app -l eastus
+az keyvault secret set --vault-name kv-app -n db-password --value "..."
+
+# Give the app a managed identity, then grant it read access
+az webapp identity assign -g rg-app -n my-api
+az keyvault set-policy -n kv-app --object-id &lt;principal-id&gt; --secret-permissions get list</code></pre>
+  <blockquote>Managed identity is the important part: the app authenticates to Key Vault using an
+    Azure-managed identity, so there is no bootstrap secret sitting in config to leak.</blockquote>
+
+  <h2>Event Hubs vs Service Bus</h2>
+  <pre><code>Event Hubs                        Service Bus
+─────────────────────────────     ─────────────────────────────
+high-throughput streaming         reliable enterprise messaging
+partitions + consumer offsets     queues, topics, subscriptions
+replay by offset                  per-message ack, dead-letter queue
+"firehose of events"              "each message must be handled once"
+Kafka protocol compatible         AMQP, sessions, scheduled delivery
+telemetry, clickstream, IoT       commands, orders, workflow steps</code></pre>
+
+  <hr>
+
+  <h2>Top 20 Interview Questions</h2>
+
+  <div class="followup-block">
+    <div class="followup-item">
+      <div class="fq">1. Which Azure services have you worked with and what for?</div>
+      <div class="fa">Mainly App Service for hosting our Spring Boot microservices, Azure SQL as
+        the primary relational store, Blob Storage for generated PDF reports and documents, Event
+        Hubs as a Kafka-compatible broker for notification and appraisal events, and Application
+        Insights for tracing and monitoring. Alongside those, Key Vault for secrets and Azure
+        DevOps pipelines for CI/CD.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">2. What is a resource group and why does it matter?</div>
+      <div class="fa">A resource group is a logical container for resources that share a lifecycle.
+        It matters because deleting the group deletes everything in it, and because RBAC and
+        policy are commonly applied at that level. The usual convention is one group per
+        application per environment, so tearing down a whole environment is a single operation
+        rather than hunting individual resources.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">3. When would you use App Service over AKS?</div>
+      <div class="fa">App Service when you want to deploy a web app or API without managing
+        infrastructure, since it handles the OS, patching, scaling, load balancing, and TLS for
+        you. AKS when you need control over orchestration, custom networking, sidecars or a
+        service mesh, or you are running many interdependent services that benefit from a shared
+        cluster. App Service is faster to get right; AKS costs more operational effort and pays
+        off at scale.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">4. What are deployment slots and how do they give zero-downtime releases?</div>
+      <div class="fa">A slot is a fully separate running instance of the app under the same App
+        Service plan, with its own hostname. You deploy to a staging slot, let it start and warm
+        up, then swap. The swap is a routing change rather than a redeploy, so users never hit a
+        cold or half-started instance, and if something is wrong you swap back immediately. Some
+        settings can be marked slot-specific so connection strings do not travel with the swap.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">5. What is the difference between Event Hubs and Service Bus?</div>
+      <div class="fa">Event Hubs is a high-throughput event streaming platform, essentially Azure's
+        Kafka, where consumers read from partitions by offset and can replay history. Service Bus
+        is an enterprise message broker built for reliable command-style messaging with queues,
+        topics, subscriptions, dead-lettering, and per-message acknowledgment. Event Hubs is for
+        streams of telemetry; Service Bus is for discrete messages that must each be processed
+        exactly once.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">6. What are the Blob Storage access tiers?</div>
+      <div class="fa">Hot for frequently accessed data, with the highest storage cost and lowest
+        access cost. Cool for data kept at least 30 days and read infrequently, Cold for 90 days
+        or more, and Archive for offline retention, which is cheapest to store but takes hours to
+        rehydrate before you can read it. Lifecycle management rules can move blobs down the tiers
+        automatically based on age, which is the usual way teams control storage cost.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">7. What is a SAS token?</div>
+      <div class="fa">A Shared Access Signature is a signed URL that grants scoped, time-limited
+        access to a storage resource without sharing the account key. You specify the permissions,
+        the expiry, and optionally an IP range or protocol. It is how you hand a client a
+        temporary download link for a private blob. The important discipline is short expiries
+        and, where possible, a stored access policy so a token can be revoked without rotating the
+        account key.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">8. How do you handle secrets in Azure?</div>
+      <div class="fa">Key Vault, accessed through a managed identity. The service gets an identity
+        assigned by Azure, that identity is granted read access to specific secrets, and the app
+        authenticates without any credential in configuration. This removes the bootstrap problem
+        where you would otherwise need a secret to fetch your secrets. Spring Boot can pull Key
+        Vault values straight into the property source so code reads them as ordinary properties.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">9. What is a managed identity and what are the two types?</div>
+      <div class="fa">An identity in Entra ID that Azure manages for a resource, with no
+        credentials for you to store or rotate. System-assigned is tied to one resource and is
+        deleted with it. User-assigned is a standalone identity you can attach to several
+        resources, which is what you want when multiple services need the same permissions, or
+        when you want the identity to survive the resource being recreated.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">10. What is the difference between Azure SQL Database, Managed Instance, and SQL on a VM?</div>
+      <div class="fa">Azure SQL Database is fully managed per-database PaaS with the least
+        operational overhead but the fewest server-level features. Managed Instance is nearly full
+        SQL Server compatibility, including SQL Agent, cross-database queries, and CLR, aimed at
+        lift-and-shift migrations. SQL on a VM is IaaS where you own the OS, patching, and
+        backups, chosen when you need something the managed options do not expose.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">11. What is the difference between DTU and vCore pricing?</div>
+      <div class="fa">DTU is a bundled abstract unit blending CPU, memory, and IO into a single
+        number, simple but opaque, and you scale the whole bundle together. vCore lets you pick
+        compute and storage independently, exposes the actual hardware generation, and supports
+        Azure Hybrid Benefit for existing SQL Server licenses. vCore is the recommended model
+        today because sizing and cost are far easier to reason about.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">12. What is the difference between a region, an availability zone, and a paired region?</div>
+      <div class="fa">A region is a geographic location containing datacenters. An availability
+        zone is a physically separate datacenter within a region with independent power, cooling,
+        and networking, so zone-redundant deployments survive a single datacenter failure. A
+        paired region is a second region in the same geography used for disaster recovery and
+        staged platform updates, so Azure never updates both halves of a pair at once.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">13. How does autoscaling work in App Service?</div>
+      <div class="fa">Scale up means moving to a larger plan tier with more CPU and memory; scale
+        out means adding instances. Autoscale rules add or remove instances based on metrics such
+        as CPU percentage or queue length, or on a schedule for known traffic patterns. Two things
+        matter in practice: set a cooldown so the service does not oscillate, and make sure the
+        app is stateless, since any instance can disappear on a scale-in.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">14. What does Application Insights give you and how do you instrument a Spring Boot app?</div>
+      <div class="fa">Distributed tracing, request and dependency timings, exception tracking, live
+        metrics, and custom telemetry, all queryable with KQL. For Spring Boot the simplest
+        approach is the Java agent attached with <code>-javaagent</code> at startup, which
+        auto-instruments HTTP calls, JDBC, and logging with no code changes. You can add custom
+        events through the SDK where you need business-level telemetry, and sampling keeps the
+        cost down on high-traffic services.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">15. What is a private endpoint and how does it differ from a service endpoint?</div>
+      <div class="fa">A private endpoint assigns the PaaS service a private IP inside your virtual
+        network, so traffic never traverses the public internet and the service can have public
+        access disabled entirely. A service endpoint keeps the public IP but restricts access to
+        traffic originating from specific subnets. Private endpoints are the stronger and now
+        preferred option, particularly for databases and storage holding sensitive data.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">16. What is Infrastructure as Code in Azure and what are the options?</div>
+      <div class="fa">ARM templates are the native JSON format, verbose and awkward to author by
+        hand. Bicep is a DSL that compiles to ARM with much cleaner syntax, modules, and type
+        checking, and is the current recommendation for Azure-only work. Terraform is the choice
+        when you are multi-cloud or already standardized on it. The point of all three is that
+        environments are reproducible and reviewable rather than hand-clicked in the portal.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">17. How does authentication work with Entra ID and OAuth2?</div>
+      <div class="fa">Entra ID, formerly Azure AD, is the identity provider issuing OAuth2 and OIDC
+        tokens. For a user-facing app you use the authorization code flow with PKCE; for
+        service-to-service you use client credentials, or better, a managed identity so there is
+        no client secret at all. On the Spring Boot side the resource server validates the JWT
+        against Entra's JWKS endpoint, checking issuer, audience, and signature, then maps roles
+        or scopes from the token claims onto authorities.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">18. What is Azure API Management for?</div>
+      <div class="fa">It sits in front of your APIs as a gateway handling concerns you do not want
+        duplicated in every service: authentication, rate limiting and quotas, request and
+        response transformation, caching, versioning, and a developer portal with generated
+        documentation. It is most valuable when you have many backend services and want one
+        consistent, governed entry point rather than exposing each service directly.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">19. What are Azure Functions and what is the cold start problem?</div>
+      <div class="fa">Functions are serverless, event-triggered compute billed per execution, good
+        for glue work like reacting to a blob upload or running a scheduled job. On the Consumption
+        plan, an idle function has no warm instance, so the first request pays the cost of
+        allocating and initializing one, which is especially noticeable on the JVM. The Premium
+        plan keeps pre-warmed instances to avoid this, at the cost of paying for idle capacity.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">20. How do you control cost in Azure?</div>
+      <div class="fa">Right-size first, since over-provisioned App Service plans and databases are
+        usually the largest waste. Then reserved instances or savings plans for predictable
+        long-running workloads, autoscale so you are not paying peak capacity around the clock,
+        and blob lifecycle rules to tier cold data down automatically. Operationally, tag
+        resources by team and environment so Cost Management can attribute spend, and set budget
+        alerts to catch surprises early rather than at the end of the month.</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>Where I've Actually Used This</h2>
+
+  <div class="story-block">
+    <h3>1. A 404 on a PDF that clearly existed in blob storage</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Users clicking to view a previously generated appraisal PDF got a 404, even though we could see the file sitting in blob storage.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Find why a URL that looked valid wasn't resolving, without guessing and touching URL-building code blindly.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I checked the storage console first and found the PDF was uploaded to one storage account while the code building the download URL pointed at a different, similarly named account.</div>
+    <div class="star-row"><span class="star-label">Result:</span> One-line config fix. It reinforced verifying the real Azure resource state before touching code, and why we only persist the blob filename, building the SAS URL from config at read time so nothing time-sensitive is ever stored.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>2. Deciding not to run DDL by hand against a shared Azure SQL database</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> New cache tables needed to live in an Azure SQL database already shared with another team's production tables, and there was a suggestion to just run DDL manually to move faster.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Get the schema in place without risking drift or damage to the shared database.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I proposed Flyway migrations scoped to our own schema with a separate migration history table, plus a baseline migration with an if-not-exists guard so the schema itself gets created first on a genuinely fresh database.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The baseline migration caught a real fresh-database bug in a controlled test environment instead of surprising us in production, confirming the upfront discipline was worth it on shared Azure infrastructure.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>3. A missing DataSource guard that could still fail App Service startup</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A cache feature was controlled by a config flag meant to disable it cleanly, but the flag only gated behavior, not bean creation, so the DataSource was still built eagerly on startup.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Make sure a bad connection string couldn't take down the whole App Service instance even with the feature disabled.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I used ConditionalOnProperty so the DataSource bean itself is only created when the flag is true, instead of being created regardless and simply not called.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Turning the flag off now genuinely removes the dependency, which matters specifically on managed hosting like App Service where a failed startup takes the whole instance down, not just one feature.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>4. Tracing a logging gap to Spring bean initialization order</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Our Application Insights logs had a gap right after startup, hiding early telemetry that would normally help diagnose startup issues.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Find the root cause even though it wasn't part of my assigned work.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I found a log-clearing configuration bean was running after the Application Insights appender had already registered, wiping its early logs, since Spring doesn't guarantee bean order beyond explicit dependencies. I reordered it with an explicit DependsOn.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The logging gap disappeared, restoring visibility into the exact startup window where issues are hardest to diagnose without logs.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>5. Fire-and-forget notification publishing to Kafka-compatible Event Hubs</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A message send was calling the notification publish step synchronously, so if the broker was ever slow, that delay added directly onto a core chat send.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Decouple the reliability of a secondary system, notification delivery, from the reliability of the core feature.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I converted the publish call to fire-and-forget using Async, with failures caught and logged inside that method instead of propagated back to the caller, before those events flow through Event Hubs to email, SMS, and in-app delivery.</div>
+    <div class="star-row"><span class="star-label">Result:</span> A broker hiccup can no longer surface as a failed message send, which matters more once you're relying on a managed event pipeline you don't fully control end to end.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>6. Keeping PDF URLs stateless instead of persisting anything time-sensitive</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Generated PDFs needed a way to be linked back to from history and cache records, but SAS URLs expire and shouldn't be treated as permanent.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Give users a working download link without ever persisting something that could go stale.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I stored only the blob filename on the row and built the actual SAS URL from config plus that filename at read time, every time it's requested, rather than generating and storing a URL once.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Links never expire from the user's perspective, since a fresh SAS token is minted on every read, and it also made the earlier storage-account mismatch bug a one-line config fix instead of a data migration.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>7. Server-side identity instead of trusting a client-supplied id on a paid write</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Building a new cache write path alongside an existing paid history path, I had to make sure identity for a billing-relevant write couldn't be spoofed.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Ensure a request couldn't write into another user's record by tampering with an id in the body.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I mirrored the existing pattern of deriving identity from the JWT, verified against Azure AD / Entra ID, rather than trusting anything supplied in the request payload.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The new module inherited a security property the original system had already gotten right, without needing to rediscover why it mattered.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>8. Escalating a storage failure to a critical log instead of failing silently</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> If an appraisal database save failed, the original code silently logged the error and returned the computed valuation to the user with no visibility for the team.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Keep the good user experience of not failing the request, while giving the team real visibility into how often storage failures happen.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I used Spring Retry with backoff, and a Recover method that escalates to a clearly marked critical log once retries are exhausted, which we could then wire into alerting on top of Application Insights.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Failing gracefully for the user and failing silently for the team turned out to be two different problems that both needed deliberate handling.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>9. Migrating off self-hosted WebSocket infrastructure instead of continuing to patch it</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Our real time messaging system had intermittent connection failures under multi-instance load, root-caused to sticky session cookies not surviving a hop through our content delivery layer.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Decide between more sticky-session tuning or a bigger migration to a managed relay service.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I pushed for the migration, since sticky sessions only reduce the odds of hitting the wrong instance, they don't remove the requirement entirely, and a managed relay removes the need for session pinning altogether.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The intermittent failures disappeared completely instead of just becoming rarer, reinforcing that a genuine root cause sometimes calls for infrastructure change, not another config pass.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>10. Explaining a caching risk in terms of dollars and trust, not architecture</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> There was a proposal to let a free property cache path and a paid history path share more backend logic to save engineering time.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Explain to a non-technical stakeholder why that was a real risk, not just an engineering preference.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I framed it around the concrete failure scenario, a shared write path bug could let a free user get accidentally charged, or silently overwrite a paid customer's record, rather than describing module boundaries or Azure architecture.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The stakeholder agreed the separation was worth keeping once the risk was framed around a specific dollars-and-trust outcome instead of abstract infrastructure language.</div>
+  </div>
+
+</div>

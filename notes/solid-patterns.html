@@ -118,4 +118,49 @@
     <img src="assets/img/design-patterns-junior-middle-senior-cheatsheet.png" alt="Design patterns cheat sheet by experience level">
     <figcaption>Design patterns cheat sheet</figcaption>
   </figure>
+
+  <hr>
+
+  <h2>From My Own Work</h2>
+
+  <div class="story-block">
+    <h3>1. SRP violation risk: keeping paid and free write paths in separate modules</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A paid appraisal history write path and a free cache write path were conceptually related but needed to never share behavior, since a bug crossing them could double-charge someone or corrupt an audit trail.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Prevent a shared service class from slowly accumulating both responsibilities as features were added over time.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I kept the two write paths in two entirely separate Spring Boot starter modules, so each module's single responsibility was reinforced by physical separation, not just by disciplined class design within one module.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The two systems have coexisted without leaking into each other, since crossing the boundary required a deliberate new dependency, not a convenient shortcut inside a shared class.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>2. OCP and Strategy: reconciling two valuation engines without branching logic</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Two valuation engines produced structurally different appraisal data, one with dollar adjustments, one with percentage adjustments, and both had to write into one shared schema.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Support both without an ever-growing if-else branching on which engine produced the data.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I wrote a normalizer that converts commercial's percentage adjustments to dollars at write time, so both engines write into the same schema through one consistent interface, rather than the schema layer needing to know engine-specific branching logic.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Any future third engine only needs its own normalizer implementation, the shared schema and its consumers don't need to change, which is the practical benefit OCP is describing.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>3. DIP: depending on a shared transport interface instead of 20 call sites</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A report pipeline made around 20 calls to a third party API, and I needed to add caching without touching each of the 20 call sites individually.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Add caching in a way that didn't require every caller to know it existed.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I found that all 20 calls funneled through a single shared transport interface, and added caching as a decorator wrapping that one interface, so every caller kept depending on the abstraction, not on a concrete client they'd now need to know was cached.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Repeat lookups for fresh data dropped to zero external calls, with zero changes to any of the 20 existing call sites, since they only ever depended on the interface.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>4. LSP-adjacent judgment call: reusing an appraisal schema for a poorly fitting engine</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Land appraisals had no ARV, no beds or baths, and no adjustment breakdown, but needed to live in the same appraisal tables as residential and commercial.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Decide whether forcing land into the existing shape violated the implicit contract other consumers expected from that schema.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I mapped only the fields that genuinely applied to land, left the rest explicitly null, and documented why, following the same pattern the commercial engine already used for its own gaps, rather than inventing a new convention.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Land support shipped without a schema fork, and any consumer of the shared schema could rely on the same contract, some fields being null for a given property type, being documented and consistent rather than a surprise.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>5. ISP in practice: a normalizer interface instead of one giant appraisal writer</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A single write path handling residential, commercial, and land appraisal data risked becoming one large class with conditional logic for fields that only applied to some property types.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Avoid forcing each engine-specific writer to depend on methods or fields it would never use.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I kept the normalization logic per engine focused only on the fields that engine actually produces, rather than one interface with every possible field across all three property types that most implementations would leave unused.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Each engine's normalizer stayed simple and focused, and adding a future property type doesn't require touching the other two engines' code at all.</div>
+  </div>
+
 </div>

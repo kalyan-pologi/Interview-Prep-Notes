@@ -342,4 +342,88 @@
     <figcaption>Quick-reference cheat sheet of 111 common Java interview questions.</figcaption>
   </figure>
 
+  <hr>
+
+  <h2>From My Own Work</h2>
+
+  <div class="story-block">
+    <h3>1. A HashMap-based dedup silently collapsing a distinct-count check</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A chat session uniqueness check counted distinct participants using a Set, but when the transaction coordinator was both the creator and a participant, their id deduplicated against itself.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Fix the count check so it actually enforced "two distinct people."</div>
+    <div class="star-row"><span class="star-label">Action:</span> I reworked the uniqueness logic to model the creator as a required, distinct role rather than folding them into the same participant Set used for counting.</div>
+    <div class="star-row"><span class="star-label">Result:</span> It was a good reminder that Set-based deduplication is exactly the right tool for removing duplicates, and exactly the wrong tool when you need to count roles that can overlap in identity but not in meaning.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>2. Choosing ExecutorService/CompletableFuture over WebFlux for a specific pipeline</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A report pipeline needed to fire required calls that had to succeed together, and optional calls that could fail independently.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Express that composition correctly without one failing call taking down the whole report.</div>
+    <div class="star-row"><span class="star-label">Action:</span> Since the codebase was already reactive, I used Mono.zip for the required group, since it fails the combined result if any one source errors, and Flux with onErrorResume for the optional group, so one failure degrades to a fallback instead of terminating the stream.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The distinction that mattered wasn't reactive versus imperative concurrency, it was picking the primitive that matched whether a group of calls needed to succeed together or could fail independently.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>3. Async decoupling a core action from a secondary system's health</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A message send was calling a notification publish step synchronously, so a slow Kafka broker directly added latency to sending a message.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Stop a secondary system's slowness from degrading a core feature.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I converted the publish call to fire-and-forget using @Async, with failures caught and logged inside that method rather than propagated to the caller.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The core send path's latency became independent of the messaging system's health, which is the real value of Async, decoupling reliability, not just moving work off a thread.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>4. Why a retry needed a fresh transaction, not a try-catch</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A cache upsert used try-save-then-catch-on-conflict, but the retry read inside the same transaction as the failed insert kept failing.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Make the retry actually succeed after catching the constraint violation.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I scoped the retry to run in its own fresh transaction, since once a transaction hits an exception like a constraint violation it gets marked rollback-only in Spring/JPA, and catching the exception doesn't undo that marking.</div>
+    <div class="star-row"><span class="star-label">Result:</span> This is a subtle but common gotcha, exception handling in Java doesn't override transactional state that a framework is tracking separately underneath it.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>5. WeakReference-adjacent reasoning for per-instance in-memory state</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Presence tracking lived in one instance's memory, so a user's online status looked inconsistent once we scaled to multiple instances.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Recognize that this wasn't just a performance concern, it was a correctness gap.</div>
+    <div class="star-row"><span class="star-label">Action:</span> In-memory state on one JVM instance doesn't survive or sync across others, so I moved presence into a shared Redis-backed service instead of trying to replicate or coordinate per-instance memory.</div>
+    <div class="star-row"><span class="star-label">Result:</span> It reinforced that any state held in a single JVM's heap is implicitly scoped to that instance, which is easy to forget once an application scales horizontally.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>6. Immutable objects and thread safety in a concurrent notification pipeline</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Notification events flowing through Kafka consumers needed to be safely read by multiple concurrent handlers without defensive copying at every step.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Avoid a class of concurrency bugs where one handler's mutation could affect another's view of the same event.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I modeled notification payloads as immutable objects, no setters, all fields final, so any handler that received one could not accidentally corrupt it for a concurrently running handler.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Immutability removed an entire category of thread-safety bugs by construction, rather than relying on every handler to behave defensively.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>7. Optional as a signal, not a replacement for every nullable field</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> When making transactionId nullable end to end for enquiry sessions, there was a temptation to wrap every downstream read in Optional.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Decide where Optional actually added clarity versus where it just added ceremony.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I used Optional at method return boundaries where "no transaction" was a meaningful outcome the caller had to handle, but kept internal fields as plain nullable references where the null was already well understood context, not a public API contract.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Optional is most valuable as a signal at an API boundary, overusing it internally just adds unwrapping noise without adding safety.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>8. Diagnosing an N+1-like pattern with real profiling, not guessing</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Chat operations were taking 30 to 60 seconds, and it wasn't obvious from reading the code which query was the problem.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Find the actual bottleneck rather than optimizing the first suspicious-looking query.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I used Hibernate's SQL logging and EXPLAIN ANALYZE against a realistically sized dataset, which surfaced a pattern of cumulative redundant queries across several lazy-loaded associations, not one single slow query.</div>
+    <div class="star-row"><span class="star-label">Result:</span> A query plan that looks fine on a handful of local rows can hide a pattern that only becomes visible, and expensive, at real data volumes.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>9. Static initialization order mattering more than expected</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A logging configuration bean was wiping out early application monitoring logs because it initialized after the APM appender had already registered.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Fix the ordering without relying on luck or classpath scanning order.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I used an explicit @DependsOn to force the log-clearing bean to initialize before the APM appender, since the JVM and Spring don't guarantee initialization order beyond explicit dependency edges you declare.</div>
+    <div class="star-row"><span class="star-label">Result:</span> It was a reminder that implicit ordering, whether class loading order or bean creation order, is never something to build correctness on without an explicit guarantee.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>10. Records as a natural fit for immutable DTOs in a caching layer</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A caching layer needed a value type to represent a cached API response that should never be mutated after being read from the cache.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Avoid a mutable POJO where a caller could accidentally modify a shared cached instance and corrupt what other callers see.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I used a Java record for the cached value shape, getting immutability, equals/hashCode, and a compact constructor for validation for free instead of hand-writing that boilerplate on a regular class.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Records made the immutability guarantee explicit and enforced by the compiler, rather than a convention someone could accidentally violate with a setter.</div>
+  </div>
+
 </div>

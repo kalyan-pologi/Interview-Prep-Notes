@@ -1,0 +1,411 @@
+<div class="section-header">
+  <div class="tag">Tooling</div>
+  <h1>🍃 MongoDB</h1>
+  <p>Core concepts, queries, aggregation, and interview questions.</p>
+</div>
+
+<div class="note-body">
+
+  <h2>Core concepts</h2>
+  <pre><code>Database    →  container for collections
+Collection  →  group of documents (like a table, but schema-less)
+Document    →  a single BSON record (like a row, but nested/flexible)
+Field       →  key-value pair inside a document
+_id         →  primary key, auto-generated ObjectId if not supplied</code></pre>
+
+  <h2>CRUD basics</h2>
+  <pre><code>// Insert
+db.users.insertOne({ name: "Kalyan", role: "dev", age: 28 })
+db.users.insertMany([{ name: "A" }, { name: "B" }])
+
+// Read
+db.users.find({ role: "dev" })                    // all matching
+db.users.findOne({ _id: ObjectId("...") })        // single doc
+db.users.find({ age: { $gt: 25 } })               // comparison
+db.users.find({}, { name: 1, _id: 0 })            // projection
+db.users.find().sort({ age: -1 }).limit(10).skip(20)
+
+// Update
+db.users.updateOne({ name: "Kalyan" }, { $set: { role: "senior" } })
+db.users.updateMany({ role: "dev" }, { $inc: { age: 1 } })
+db.users.replaceOne({ name: "A" }, { name: "A", role: "qa" })
+db.users.updateOne({ name: "X" }, { $set: { role: "dev" } }, { upsert: true })
+
+// Delete
+db.users.deleteOne({ name: "A" })
+db.users.deleteMany({ role: "intern" })</code></pre>
+
+  <h2>Query operators</h2>
+  <pre><code>Comparison  →  $eq  $ne  $gt  $gte  $lt  $lte  $in  $nin
+Logical     →  $and  $or  $not  $nor
+Element     →  $exists  $type
+Array       →  $all  $elemMatch  $size
+Update      →  $set  $unset  $inc  $push  $pull  $addToSet  $rename
+Evaluation  →  $regex  $expr  $text</code></pre>
+
+  <pre><code>// Array matching: both conditions on the SAME element
+db.orders.find({ items: { $elemMatch: { sku: "A1", qty: { $gte: 2 } } } })
+
+// Without $elemMatch, conditions can match different elements
+db.orders.find({ "items.sku": "A1", "items.qty": { $gte: 2 } })</code></pre>
+
+  <h2>Indexes</h2>
+  <pre><code>db.users.createIndex({ email: 1 }, { unique: true })   // 1 = asc, -1 = desc
+db.users.createIndex({ role: 1, age: -1 })             // compound
+db.users.createIndex({ bio: "text" })                  // text search
+db.users.createIndex({ loc: "2dsphere" })              // geospatial
+db.sessions.createIndex({ createdAt: 1 }, { expireAfterSeconds: 3600 })  // TTL
+db.users.createIndex({ email: 1 }, { partialFilterExpression: { active: true } })
+
+db.users.getIndexes()
+db.users.dropIndex("email_1")
+db.users.find({ role: "dev" }).explain("executionStats")</code></pre>
+  <blockquote><b>ESR rule</b> for compound index field order: <b>E</b>quality first, then
+    <b>S</b>ort, then <b>R</b>ange. A compound index also serves queries on any prefix of its
+    fields, so <code>{ role: 1, age: -1 }</code> covers queries on <code>role</code> alone.</blockquote>
+
+  <h2>Aggregation pipeline</h2>
+  <pre><code>db.orders.aggregate([
+  { $match:  { status: "shipped" } },              // filter FIRST (uses index)
+  { $group:  { _id: "$customerId",
+               total: { $sum: "$amount" },
+               count: { $sum: 1 },
+               avg:   { $avg: "$amount" } } },
+  { $sort:   { total: -1 } },
+  { $limit:  10 },
+  { $lookup: { from: "customers", localField: "_id",
+               foreignField: "_id", as: "customer" } },
+  { $unwind: "$customer" },
+  { $project:{ name: "$customer.name", total: 1, _id: 0 } }
+])</code></pre>
+  <pre><code>Common stages
+$match    →  filter documents (push as early as possible)
+$group    →  group and accumulate ($sum, $avg, $min, $max, $push, $addToSet)
+$project  →  reshape / include / exclude fields
+$sort     →  order results
+$limit    →  cap result count
+$skip     →  offset for pagination
+$unwind   →  flatten an array into one document per element
+$lookup   →  left outer join to another collection
+$facet    →  run multiple sub-pipelines in one pass</code></pre>
+
+  <h2>Spring Data MongoDB</h2>
+  <pre><code>@Document(collection = "users")
+public class User {
+    @Id private String id;
+    @Indexed(unique = true) private String email;
+    private String role;
+    private int age;
+}
+
+public interface UserRepository extends MongoRepository&lt;User, String&gt; {
+    List&lt;User&gt; findByRole(String role);
+    Optional&lt;User&gt; findByEmail(String email);
+    List&lt;User&gt; findByAgeGreaterThanAndRole(int age, String role);
+
+    @Query("{ 'age': { $gte: ?0 } }")
+    List&lt;User&gt; findOlderThan(int age);
+}
+
+// Programmatic queries with MongoTemplate
+Query q = new Query(Criteria.where("role").is("dev").and("age").gte(25));
+q.with(Sort.by(Sort.Direction.DESC, "age")).limit(10);
+List&lt;User&gt; users = mongoTemplate.find(q, User.class);
+
+// Atomic update without read-modify-write
+mongoTemplate.updateFirst(
+    Query.query(Criteria.where("email").is(email)),
+    new Update().inc("loginCount", 1).set("lastLogin", Instant.now()),
+    User.class);</code></pre>
+
+  <h2>Replication &amp; sharding</h2>
+  <pre><code>Replica set  →  1 primary + N secondaries, automatic failover via election
+                Writes always go to the primary
+                Secondaries replicate from the oplog (capped collection)
+                Needs a majority to elect a new primary → use odd member counts
+
+Sharding     →  horizontal partitioning across shards by shard key
+                mongos    → query router
+                config servers → store cluster metadata
+                Shard key choice is effectively permanent and drives distribution</code></pre>
+
+  <h2>Read &amp; write concerns</h2>
+  <pre><code>Write concern   w:1            → acknowledged by primary only (fast, less safe)
+                w:"majority"   → acknowledged by a majority (durable)
+                j:true         → wait for journal flush to disk
+
+Read concern    "local"        → whatever the node has (may roll back)
+                "majority"     → only majority-committed data
+                "linearizable" → strongest, slowest
+
+Read preference primary | primaryPreferred | secondary
+                secondaryPreferred | nearest</code></pre>
+
+  <hr>
+
+  <h2>Top 20 Interview Questions</h2>
+
+  <div class="followup-block">
+    <div class="followup-item">
+      <div class="fq">1. What is MongoDB and how does it differ from a relational database?</div>
+      <div class="fa">MongoDB is a document-oriented NoSQL database that stores data as BSON
+        documents rather than rows in tables. It has no fixed schema, so documents in the same
+        collection can have different fields. It scales horizontally through sharding, favors
+        denormalization and embedding over joins, and while single-document operations are always
+        atomic, multi-document ACID transactions only arrived in version 4.0 and carry more
+        overhead than in a relational database.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">2. What is BSON and why not just use JSON?</div>
+      <div class="fa">BSON is Binary JSON, the format MongoDB actually stores and transmits. It
+        supports types JSON has no notion of, like ObjectId, Date, Decimal128, and raw binary. It
+        is also length-prefixed, so the engine can skip over fields it does not need instead of
+        parsing the entire document, which makes traversal significantly faster.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">3. What is the _id field and how is an ObjectId built?</div>
+      <div class="fa">Every document has a unique <code>_id</code> that serves as its primary key.
+        If you do not supply one, MongoDB generates a 12-byte ObjectId made of a 4-byte timestamp,
+        a 5-byte random value, and a 3-byte incrementing counter. It is automatically indexed and
+        immutable once written. Because the leading bytes are a timestamp, ObjectIds sort roughly
+        by creation time, which is occasionally useful but should not be relied on for strict
+        ordering across machines.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">4. When would you embed a document versus reference it?</div>
+      <div class="fa">Embed when the child data is owned by the parent, always read together, and
+        bounded in size, for example line items inside an order. Reference when the data is shared
+        across many parents, updated independently, or unbounded in growth, for example a user
+        referenced by thousands of comments. The hard constraint is the 16MB document limit, so
+        anything that grows without bound has to be a reference.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">5. Why is there a 16MB document size limit?</div>
+      <div class="fa">It prevents a single document from consuming excessive RAM and network
+        bandwidth during a read, since MongoDB loads whole documents rather than individual
+        columns. In practice it is a design signal: if you are approaching it, your schema
+        probably has an unbounded array that should be a separate collection. For genuinely large
+        binary payloads, GridFS splits files into chunks across two collections.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">6. How do indexes work in MongoDB and what is a covered query?</div>
+      <div class="fa">Indexes are B-tree structures that let the engine locate documents without a
+        full collection scan. A covered query is one where every field the query needs, both in
+        the filter and the projection, exists in the index, so MongoDB answers it entirely from
+        the index without touching the documents. You can confirm this with
+        <code>explain()</code>, where the winning plan shows an IXSCAN with no FETCH stage.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">7. What order should fields go in a compound index?</div>
+      <div class="fa">Follow the ESR rule: equality fields first, then sort fields, then range
+        fields. A compound index also serves any prefix of its fields, so an index on
+        <code>{ a: 1, b: 1, c: 1 }</code> supports queries on <code>a</code>, on
+        <code>a + b</code>, and on all three, but not on <code>b</code> alone. Getting the order
+        wrong is the most common cause of an index quietly not being used.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">8. What is the aggregation pipeline?</div>
+      <div class="fa">A sequence of stages where each stage transforms the document stream and
+        passes the result to the next, similar to a Unix pipe. It handles grouping, joins,
+        reshaping, and computed fields that a plain <code>find()</code> cannot. The key
+        optimization is putting <code>$match</code> and <code>$limit</code> as early as possible so
+        the pipeline can use indexes and reduce the working set before expensive stages like
+        <code>$group</code> or <code>$lookup</code> run.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">9. What does $lookup do and what are its limitations?</div>
+      <div class="fa"><code>$lookup</code> performs a left outer join to another collection in the
+        same database. It is noticeably slower than a relational join because there is no query
+        planner optimizing across collections, and in a sharded cluster the joined collection
+        historically had to be unsharded. It is fine for reporting and enrichment, but if you find
+        yourself reaching for it on every read, the schema probably should have embedded that data
+        instead.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">10. What is a replica set and how does failover work?</div>
+      <div class="fa">A replica set is one primary and several secondaries holding copies of the
+        same data. All writes go to the primary and replicate to secondaries via the oplog, a
+        capped collection of operations. If the primary becomes unreachable, the remaining members
+        hold an election and a majority vote promotes a new primary. This is why member counts
+        should be odd, since an even split cannot reach a majority and the set goes read-only.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">11. What is sharding and what makes a good shard key?</div>
+      <div class="fa">Sharding partitions a collection horizontally across multiple servers, with
+        mongos routing queries and config servers holding the metadata. A good shard key has high
+        cardinality, even write distribution, and appears in most queries so the router can target
+        a single shard rather than broadcasting. A monotonically increasing key like a timestamp
+        is a classic bad choice because every new write lands on the same shard, creating a
+        hotspot.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">12. How do transactions work in MongoDB?</div>
+      <div class="fa">Single-document writes have always been atomic. Multi-document transactions
+        arrived in 4.0 for replica sets and 4.2 for sharded clusters, using a session-scoped API
+        with commit and abort. They provide snapshot isolation but hold locks and consume more
+        resources, and there is a default 60-second runtime limit. The idiomatic advice is to
+        design your schema so that a logical unit of work fits in one document and you rarely need
+        them.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">13. What are write concern and read concern?</div>
+      <div class="fa">Write concern controls how many nodes must acknowledge a write before it is
+        considered successful: <code>w:1</code> is just the primary, <code>w:"majority"</code>
+        guarantees durability across a failover, and <code>j:true</code> additionally waits for the
+        journal to flush to disk. Read concern controls what data you are allowed to see:
+        <code>"local"</code> may return writes that could still roll back, while
+        <code>"majority"</code> only returns majority-committed data. Together they are the main
+        consistency versus latency dial.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">14. What is a TTL index and where is it useful?</div>
+      <div class="fa">A TTL index on a date field automatically deletes documents once they exceed
+        a configured age, checked by a background thread roughly every 60 seconds. It is ideal for
+        sessions, verification tokens, cache entries, and event logs. Two caveats: deletion is not
+        instant, so it should not be relied on for security-critical expiry, and the indexed field
+        has to actually be a Date type or the index silently does nothing.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">15. What is a capped collection?</div>
+      <div class="fa">A fixed-size collection that behaves like a circular buffer: once it reaches
+        its size limit, the oldest documents are overwritten. It preserves insertion order and
+        supports tailable cursors, which is why the replication oplog itself is a capped
+        collection. Documents in one cannot be deleted individually and cannot grow beyond their
+        original size on update.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">16. Does MongoDB have schema validation?</div>
+      <div class="fa">Yes. Since 3.6 you can attach a JSON Schema validator to a collection that
+        enforces required fields, types, and value ranges on insert and update. The validation
+        level can be strict or moderate, and the action can be to error or merely warn. It gives
+        you the safety of a schema where you want it, while still allowing fields to vary
+        elsewhere, which is a middle ground people often do not realize exists.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">17. What is WiredTiger and what does it give you?</div>
+      <div class="fa">WiredTiger has been the default storage engine since 3.2. It provides
+        document-level concurrency control rather than the collection-level locking of the old
+        MMAPv1 engine, so concurrent writes to different documents no longer block each other. It
+        also brings compression for both data and indexes, and uses MVCC with checkpoints plus a
+        write-ahead journal for durability.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">18. How do you diagnose a slow query?</div>
+      <div class="fa">Start with <code>explain("executionStats")</code> and look at the winning
+        plan. A COLLSCAN stage means no index was used; compare <code>totalDocsExamined</code>
+        against <code>nReturned</code>, since a large gap means the index is not selective enough.
+        The database profiler can log all operations above a latency threshold, and
+        <code>currentOp</code> shows what is running right now. The usual fixes are adding or
+        reordering a compound index, adding a projection so less data crosses the wire, or moving
+        a <code>$match</code> earlier in an aggregation.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">19. How do you use MongoDB from Spring Boot?</div>
+      <div class="fa">Through Spring Data MongoDB, which gives you two layers.
+        <code>MongoRepository</code> derives queries from method names like
+        <code>findByRole</code> and needs no implementation, while
+        <code>MongoTemplate</code> handles anything more programmatic, including atomic updates
+        built with the <code>Update</code> builder so you avoid a read-modify-write race. Entities
+        are mapped with <code>@Document</code> and <code>@Id</code>, and
+        <code>@Indexed</code> can declare indexes, though in production most teams prefer to
+        manage indexes explicitly through a migration tool rather than auto-creating them.</div>
+    </div>
+    <div class="followup-item">
+      <div class="fq">20. When would you not choose MongoDB?</div>
+      <div class="fa">When the data is highly relational with many-to-many relationships and
+        queries that join across several entities, since you either denormalize heavily or lean on
+        <code>$lookup</code>, and both fight the model. Also when you need strong multi-entity
+        transactional guarantees as the normal case rather than the exception, or when reporting
+        and ad-hoc analytical SQL is a primary access pattern. A financial ledger is a good
+        example of something better served by a relational database.</div>
+    </div>
+  </div>
+
+  <hr>
+
+  <h2>Where I'd Apply This From My Own Work</h2>
+  <blockquote>My hands-on production work has been on relational databases (SQL Server, Postgres).
+    These map real problems I actually solved onto how I'd approach the same problem in
+    MongoDB, so the reasoning is grounded in real work rather than a generic answer.</blockquote>
+
+  <div class="story-block">
+    <h3>1. Reconciling two structurally different data shapes</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Two valuation engines produced structurally different appraisal data, one with per-feature dollar adjustments, the other with percentage-based adjustments, and several fields had no equivalent on the other side.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Store both without forcing a rigid shape that fit neither well.</div>
+    <div class="star-row"><span class="star-label">Action:</span> We solved it relationally, with nullable columns and a normalizer converting percentages to dollars at write time. In MongoDB I'd model each comp as its own document instead, letting each engine's real shape stand rather than forcing one column set, with schema validation only on the fields both share.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Same underlying principle either way: don't force structurally different data into one rigid shape just because it's conceptually related.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>2. A concurrency race writing to the same cache key</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Two parallel calls could hit the same cache key within milliseconds, since neighborhood data got reused across nearby properties, and both could pass a miss check before either had written.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Guarantee only one write wins without a distributed lock adding latency to every request.</div>
+    <div class="star-row"><span class="star-label">Action:</span> We used a unique constraint in Postgres and caught the resulting exception as an expected signal. In MongoDB the same pattern holds: a unique index on the cache key, and the second concurrent insert throws a duplicate key error I'd catch and read back the winning document.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The fix is database-agnostic: let a unique constraint do the concurrency work instead of an application-level lock.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>3. Root-causing an N+1-like query pattern</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Chat operations were taking 30 to 60 seconds, traced to cumulative redundant queries across message, attachment, session, and participant lookups, close to a classic N+1 pattern from lazy loaded associations.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Cut the round trips without changing what data was returned.</div>
+    <div class="star-row"><span class="star-label">Action:</span> We merged separate lookups into joined JPQL queries. In MongoDB I'd look at this the other way around: embed the attachment and participant data directly inside the message document, since they are read together every time, which removes the need for a join entirely instead of just optimizing it.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Same goal, different lever: relational favors a better join, document favors embedding what's always read together.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>4. A cache key missing a parameter caused silent collisions</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A cache key built from only the parameters I assumed mattered left out a secondary parameter, and two different requests collided on the same key.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Make sure every parameter that affects the response is captured, not just the obvious ones.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I rebuilt the key generator to derive the key programmatically from every parameter reaching the call. In MongoDB, the same discipline applies to compound index design and to document keys: you cannot decide upfront which fields matter for uniqueness, you have to be exhaustive about what actually varies the data.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The underlying lesson is the same regardless of the datastore: exhaustiveness beats intuition when designing a key.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>5. Deciding to fully replace rather than diff a small dataset</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Comps had no stable natural key across refreshes, so diffing old versus new on every appraisal refresh risked matching unrelated comps that happened to share an address.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Decide between precise diffing logic or a simpler full replace.</div>
+    <div class="star-row"><span class="star-label">Action:</span> We deleted and reinserted the full comp set every time, relying on cascade delete, since comp counts were small enough that the cost was negligible. In MongoDB this maps directly to replacing an embedded array wholesale on a document update rather than diffing array elements, which avoids the same class of key-matching bug.</div>
+    <div class="star-row"><span class="star-label">Result:</span> For small, no-stable-key collections, replace-the-whole-set is usually simpler and safer than diffing, in either a relational or document model.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>6. Config-gating a feature so its infrastructure could be fully removed</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> A cache feature's kill switch only gated behavior, not bean creation, so its DataSource was still built eagerly and could fail startup even with the flag off.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Make turning the flag off genuinely remove the dependency, not just skip calling it.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I used ConditionalOnProperty so the bean itself was only created when enabled. The same principle applies to a MongoDB client: if a feature backed by Mongo is meant to be optional, the MongoClient bean itself needs to be conditionally created, not just conditionally used, or a bad connection string still takes down the app.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Think about failure of infrastructure you own, not just the systems you call into, regardless of which database is behind the flag.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>7. Freshness that varies independently per data source</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Different cached endpoints from a third party API had genuinely different real-world update cadences, so one combined staleness check would either refresh too eagerly or serve stale data.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Track freshness independently per endpoint rather than with one global rule.</div>
+    <div class="star-row"><span class="star-label">Action:</span> We anchored per-endpoint TTLs to real update cadences at the application level. In MongoDB I'd implement the same idea more natively with a TTL index per collection, or a lastUpdated field checked per document type, so each data source expires on its own schedule instead of a single blanket rule.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Mongo's built-in TTL index would actually simplify this compared to hand-rolled freshness logic.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>8. A shared database with another team's production tables</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> New cache tables needed to live in a database already shared with another team's production tables, and there was pressure to just run DDL manually to move faster.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Keep the schema reproducible without touching or risking the other team's tables.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I wired the new tables into the existing Flyway migration process instead. The MongoDB equivalent is treating index creation and schema validation rules as versioned, applied through a migration tool or an idempotent startup script, rather than someone running createIndex by hand against a shared cluster.</div>
+    <div class="star-row"><span class="star-label">Result:</span> Whatever the datastore, ad hoc changes against shared infrastructure are the risk, not the specific DDL syntax.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>9. Presence data that needed to be shared across instances</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Presence tracking lived in one instance's memory, so a user's online status looked inconsistent depending on which instance handled a given request once we scaled to multiple instances.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Centralize presence so every instance reads the same source of truth.</div>
+    <div class="star-row"><span class="star-label">Action:</span> We moved it to Redis. If I were choosing a document store for this instead, I'd use a capped collection or a TTL-indexed collection in MongoDB, since presence records are short-lived and don't need durability, similar reasoning to why we picked Redis over a relational table here.</div>
+    <div class="star-row"><span class="star-label">Result:</span> The deciding factor was access pattern, not the specific technology, frequent reads and writes on short-lived data.</div>
+  </div>
+
+  <div class="story-block">
+    <h3>10. Reusing an ill-fitting schema instead of forking it</h3>
+    <div class="star-row"><span class="star-label">Situation:</span> Land appraisals had no ARV, no beds or baths, and no adjustment breakdown, but still needed to live in the same appraisal tables used by residential and commercial.</div>
+    <div class="star-row"><span class="star-label">Task:</span> Decide between forcing land into the existing shape or building a third schema.</div>
+    <div class="star-row"><span class="star-label">Action:</span> We reused the existing tables, leaving unused columns null and documenting why. This is actually the scenario where I'd argue MongoDB is the better original choice: a land document would simply omit the fields that don't apply, with no null columns and no need to justify an ill fit after the fact.</div>
+    <div class="star-row"><span class="star-label">Result:</span> It's a good example of a real limitation of a fixed relational schema that a flexible document model avoids by default.</div>
+  </div>
+
+</div>

@@ -653,4 +653,88 @@
   <figcaption>Logging, debugging, and RCA reference</figcaption>
 </figure>
 
+<hr>
+
+<h2>From My Own Work</h2>
+
+<div class="story-block">
+  <h3>1. Two separate Spring Boot starter modules to enforce a write-path boundary</h3>
+  <div class="star-row"><span class="star-label">Situation:</span> A paid appraisal history write path and a free property cache write path had to never share a write path, since a bug crossing them could double-charge someone or corrupt the audit trail.</div>
+  <div class="star-row"><span class="star-label">Task:</span> Enforce that separation more strongly than a code review convention could.</div>
+  <div class="star-row"><span class="star-label">Action:</span> I kept the two write paths in two completely separate Spring Boot starter modules, so crossing the boundary required a deliberate new dependency, not just a few lines added to an existing shared service class.</div>
+  <div class="star-row"><span class="star-label">Result:</span> The two systems have coexisted without one leaking into the other, and the separation is visible from the module structure itself, not tribal knowledge.</div>
+</div>
+
+<div class="story-block">
+  <h3>2. @ConditionalOnProperty closing a gap between a feature flag and its infrastructure</h3>
+  <div class="star-row"><span class="star-label">Situation:</span> A cache feature's kill switch only gated behavior, not bean creation, so its DataSource was still built eagerly on startup and could fail the whole application on a bad connection string, even with the flag off.</div>
+  <div class="star-row"><span class="star-label">Task:</span> Make the flag genuinely remove the dependency, not just skip calling it.</div>
+  <div class="star-row"><span class="star-label">Action:</span> I used @ConditionalOnProperty so the DataSource bean itself is only created when the flag is true.</div>
+  <div class="star-row"><span class="star-label">Result:</span> Turning the flag off now actually removes the dependency, which taught me to think about failure of infrastructure I own, not just the systems I call into.</div>
+</div>
+
+<div class="story-block">
+  <h3>3. @Version optimistic locking on a frequently written parent row</h3>
+  <div class="star-row"><span class="star-label">Situation:</span> A message insert and its parent session's last-message-timestamp update were two separate writes, so a failure between them could leave the session showing stale data.</div>
+  <div class="star-row"><span class="star-label">Task:</span> Prevent concurrent updates from silently overwriting each other without serializing every send to that session.</div>
+  <div class="star-row"><span class="star-label">Action:</span> I combined both writes into one @Transactional boundary and used @Version-based optimistic locking on the session row, catching OptimisticLockException and retrying rather than using a pessimistic row lock.</div>
+  <div class="star-row"><span class="star-label">Result:</span> Optimistic locking was the right fit since sends are frequent and short-lived; a row lock would have serialized unrelated sends for no real benefit.</div>
+</div>
+
+<div class="story-block">
+  <h3>4. Spring Retry with @Recover to turn a silent failure into a visible one</h3>
+  <div class="star-row"><span class="star-label">Situation:</span> If an appraisal database save failed, the original code silently logged the error and returned the computed valuation, giving the team no visibility into how often it happened.</div>
+  <div class="star-row"><span class="star-label">Task:</span> Keep the good user experience while giving the team real visibility into failures.</div>
+  <div class="star-row"><span class="star-label">Action:</span> I used @Retryable with backoff for transient failures, and @Recover to escalate to a clearly marked critical log once retries were exhausted, while still returning the valuation to the user.</div>
+  <div class="star-row"><span class="star-label">Result:</span> Failing gracefully for the user and failing silently for the team turned out to be two different problems that both needed deliberate handling.</div>
+</div>
+
+<div class="story-block">
+  <h3>5. Flyway baseline migration ordered ahead of everything by version number</h3>
+  <div class="star-row"><span class="star-label">Situation:</span> Migrations for a new cache schema worked fine in dev and UAT, since those databases already had the schema from earlier testing, but failed against a genuinely fresh, empty database.</div>
+  <div class="star-row"><span class="star-label">Task:</span> Make the migrations correct for any environment, not just the ones already partially set up.</div>
+  <div class="star-row"><span class="star-label">Action:</span> I added a baseline migration that explicitly creates the schema first, guarded with an if-not-exists check, ordered ahead of everything else purely by its own version number.</div>
+  <div class="star-row"><span class="star-label">Result:</span> Migrations then succeeded reliably on a truly empty database, not just on ones that happened to already have the schema.</div>
+</div>
+
+<div class="story-block">
+  <h3>6. Scoping a @RestControllerAdvice with assignableTypes to limit blast radius</h3>
+  <div class="star-row"><span class="star-label">Situation:</span> An endpoint always returned 200 regardless of outcome, and I needed to introduce real status codes without breaking consumers who might have fragile logic built around always getting a 200.</div>
+  <div class="star-row"><span class="star-label">Task:</span> Change error signaling for one controller without affecting error handling anywhere else in the application.</div>
+  <div class="star-row"><span class="star-label">Action:</span> I scoped the @RestControllerAdvice to that one controller using assignableTypes, and kept the response DTO shape unchanged so only the status code changed.</div>
+  <div class="star-row"><span class="star-label">Result:</span> We shipped more accurate error signaling without a coordinated rollout across every consuming team, since the blast radius was limited to exactly the controller being changed.</div>
+</div>
+
+<div class="story-block">
+  <h3>7. DataIntegrityViolationException as an expected concurrency signal</h3>
+  <div class="star-row"><span class="star-label">Situation:</span> Two parallel calls could hit the same cache key within milliseconds and both pass a miss check before either had written.</div>
+  <div class="star-row"><span class="star-label">Task:</span> Guarantee only one write wins without adding a distributed lock's latency to every request.</div>
+  <div class="star-row"><span class="star-label">Action:</span> I relied on a database-level unique constraint, catching the resulting DataIntegrityViolationException as an expected signal and reading back the row the other request had already written, scoping the retry to its own fresh transaction.</div>
+  <div class="star-row"><span class="star-label">Result:</span> Intermittent exceptions under concurrent load stopped completely, with the database's own constraint doing the concurrency-safety work instead of application-level locking.</div>
+</div>
+
+<div class="story-block">
+  <h3>8. Mono.zip versus onErrorResume for required versus optional calls</h3>
+  <div class="star-row"><span class="star-label">Situation:</span> A report pipeline made around 20 calls to a third party API, where some had to succeed together and others should degrade independently.</div>
+  <div class="star-row"><span class="star-label">Task:</span> Express that composition correctly in WebFlux without one optional failure aborting the whole report.</div>
+  <div class="star-row"><span class="star-label">Action:</span> I used Mono.zip for the required group, since it errors the combined result if any source errors, and Flux with onErrorResume per call for the optional group, so a single failure degrades to a fallback instead of terminating the stream.</div>
+  <div class="star-row"><span class="star-label">Result:</span> Required calls failed fast together and optional calls soft-failed independently, exactly matching the actual business requirement instead of treating every call the same way.</div>
+</div>
+
+<div class="story-block">
+  <h3>9. Testcontainers over H2 to catch real database-specific behavior</h3>
+  <div class="star-row"><span class="star-label">Situation:</span> Repository tests ran against in-memory H2, but I needed to verify behavior specific to real SQL Server, like genuine unique constraint upserts and cascading deletes.</div>
+  <div class="star-row"><span class="star-label">Task:</span> Get real database behavior under test without slowing the whole suite down.</div>
+  <div class="star-row"><span class="star-label">Action:</span> I declared the container as a static @Container field shared across the test class, and used @DynamicPropertySource to inject its connection details before the Spring context starts.</div>
+  <div class="star-row"><span class="star-label">Result:</span> The tests caught real constraint and cascade behavior H2 would have silently handled differently, giving much more confidence in that part of the system.</div>
+</div>
+
+<div class="story-block">
+  <h3>10. @DependsOn fixing a bean initialization order bug in observability</h3>
+  <div class="star-row"><span class="star-label">Situation:</span> Application performance monitoring logs had a gap right after startup, since a log-clearing configuration bean was initializing after the APM appender had already registered.</div>
+  <div class="star-row"><span class="star-label">Task:</span> Fix the ordering, since Spring doesn't guarantee bean creation order beyond explicit dependency edges.</div>
+  <div class="star-row"><span class="star-label">Action:</span> I used an explicit @DependsOn so the log-clearing bean runs before the APM appender registers, instead of relying on implicit ordering.</div>
+  <div class="star-row"><span class="star-label">Result:</span> The logging gap disappeared, and it reinforced that bean lifecycle ordering should never be assumed without an explicit dependency declaration.</div>
+</div>
+
 </div>
