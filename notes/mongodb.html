@@ -118,6 +118,66 @@ mongoTemplate.updateFirst(
     new Update().inc("loginCount", 1).set("lastLogin", Instant.now()),
     User.class);</code></pre>
 
+  <h2>MongoDB Code Snippets</h2>
+  <p>Reusable MongoDB snippets, question by question (mirrors the SQL snippets page format).</p>
+
+  <p><b>Q: Create a collection with a JSON Schema validator requiring a name and a unique email.</b></p>
+  <pre><code>db.createCollection("student", {
+  validator: {
+    $jsonSchema: {
+      required: ["name", "email"],
+      properties: {
+        name:  { bsonType: "string" },
+        email: { bsonType: "string" }
+      }
+    }
+  }
+})
+db.student.createIndex({ email: 1 }, { unique: true })</code></pre>
+
+  <p><b>Q: Insert a full document, and insert a document specifying only some fields.</b></p>
+  <pre><code>db.student.insertOne({ student_id: 1, name: "kalyan", major: "maths" })
+db.student.insertOne({ student_id: 2, name: "prabhas" })</code></pre>
+
+  <p><b>Q: Select all documents, sorted by two fields.</b></p>
+  <pre><code>db.student.find().sort({ name: 1, major: -1 })</code></pre>
+
+  <p><b>Q: Limit results to the first N documents.</b></p>
+  <pre><code>db.student.find().limit(2)</code></pre>
+
+  <p><b>Q: Filter documents where a field matches one of several values.</b></p>
+  <pre><code>db.student.find({ name: { $in: ["kalyan", "prabhas"] } })</code></pre>
+
+  <p><b>Q: Filter documents with a partial text match on a field.</b></p>
+  <pre><code>db.student.find({ name: { $regex: "kal", $options: "i" } })</code></pre>
+
+  <p><b>Q: Get the distinct values of a field.</b></p>
+  <pre><code>db.employee.distinct("sex")</code></pre>
+
+  <p><b>Q: Update a document's value based on a condition.</b></p>
+  <pre><code>db.student.updateOne({ name: "kalyan" }, { $set: { name: "poloji" } })</code></pre>
+
+  <p><b>Q: Delete a document based on a condition.</b></p>
+  <pre><code>db.student.deleteOne({ name: "poloji" })</code></pre>
+
+  <p><b>Q: Insert-or-update a document without a race condition when two requests hit the same key at once.</b></p>
+  <pre><code>// Requires a unique index on cache_key
+db.cache.createIndex({ cache_key: 1 }, { unique: true })
+
+try {
+  db.cache.insertOne({ cache_key: key, payload: value, expiresAt: exp })
+} catch (e) {
+  // E11000 duplicate key — someone else inserted first, update instead
+  db.cache.updateOne({ cache_key: key }, { $set: { payload: value, expiresAt: exp } })
+}
+
+// Or in one atomic call using upsert (preferred over try/catch above)
+db.cache.updateOne(
+  { cache_key: key },
+  { $set: { payload: value, expiresAt: exp } },
+  { upsert: true }
+)</code></pre>
+
   <h2>Replication &amp; sharding</h2>
   <pre><code>Replica set  →  1 primary + N secondaries, automatic failover via election
                 Writes always go to the primary
