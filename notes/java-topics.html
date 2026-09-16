@@ -114,6 +114,77 @@
   <h3>Text Blocks (Java 15+)</h3>
   <p>Multi-line string literals with better formatting. Use case: SQL queries, JSON templates, HTML content.</p>
 
+  <h2>Java 8 to 21: Language Features by Version</h2>
+
+  <h3>Java 8 (2014)</h3>
+  <p><strong>Lambda Expressions:</strong> Anonymous functions enabling functional programming. Use case: callbacks, stream operations, event handlers.</p>
+  <p><strong>Streams API:</strong> Functional-style operations on collections (map, filter, reduce). Use case: data transformations, bulk operations, pipeline processing.</p>
+  <p><strong>Functional Interfaces:</strong> Interfaces with a single abstract method (Predicate, Function, Consumer). Use case: lambda compatibility, callback patterns, higher-order functions.</p>
+  <p><strong>Method References:</strong> Shorthand for lambda expressions (::). Use case: cleaner code, method passing, stream operations.</p>
+  <p><strong>Default Methods:</strong> Concrete implementations in interfaces. Use case: backward compatibility, interface evolution, mixin-like behavior.</p>
+  <p><strong>Optional:</strong> A container for nullable values, forcing null safety. Use case: avoiding NullPointerException, API design, method return values.</p>
+  <p><strong>Date/Time API (java.time):</strong> Modern, immutable date/time classes (LocalDate, LocalTime, ZonedDateTime). Use case: timezone handling, date calculations, thread safety.</p>
+
+  <h3>Java 9 (2017)</h3>
+  <p><strong>Modules (Project Jigsaw):</strong> Encapsulation at package level via module declarations. Use case: large applications, dependency isolation, version conflict resolution.</p>
+  <p><strong>Private Interface Methods:</strong> Share implementation logic between default methods. Use case: interface refactoring, code reuse, encapsulation within interfaces.</p>
+  <p><strong>Improved Streams:</strong> New methods like takeWhile(), dropWhile(), ofNullable(). Use case: stream filtering, null-safe operations, functional pipelines.</p>
+  <p><strong>Try-with-Resources Enhancement:</strong> Use final or effectively final variables directly in try-with-resources. Use case: less verbose resource management, cleaner code.</p>
+
+  <h3>Java 10 (2018)</h3>
+  <p><strong>Local Variable Type Inference (var):</strong> Compiler infers type of local variables. Use case: reducing boilerplate, maintaining readability, lambda parameter types.</p>
+  <p><strong>Unmodifiable Collections:</strong> List.copyOf(), Set.copyOf(), Map.copyOf(). Use case: defensive copying, immutable collections, thread safety.</p>
+  <p><strong>Optional.orElseThrow():</strong> Alias for get() with clearer intent. Use case: explicit exception throwing on Optional empty.</p>
+
+  <h3>Java 11 (2018, LTS)</h3>
+  <p><strong>String Methods:</strong> isBlank(), strip(), repeat(). Use case: string validation, whitespace handling, repetitive formatting.</p>
+  <p><strong>HTTP Client (Standardized):</strong> Modern async HTTP requests replacing URLConnection. Use case: REST calls, microservice communication, cleaner HTTP handling.</p>
+  <p><strong>Local Variable Syntax for Lambda:</strong> Use var in lambda parameters. Use case: lambda annotations, reduced verbosity, consistency with local variables.</p>
+  <p><strong>Nest-based Access Control:</strong> Private access between nested classes without synthetic accessors. Use case: cleaner bytecode, internal class communication.</p>
+
+  <h3>Java 12-13 (2019)</h3>
+  <p><strong>Switch Expressions (preview):</strong> Switch as an expression, not just a statement. Use case: cleaner conditional logic, functional-style code.</p>
+  <p><strong>Text Blocks (preview):</strong> Multi-line strings without concatenation. Use case: SQL queries, JSON templates, HTML, embedded code blocks.</p>
+  <p><strong>Records (preview):</strong> Immutable data carriers with automatic boilerplate (equals, hashCode, toString). Use case: DTOs, value objects, reducing verbosity.</p>
+
+  <h3>Java 14 (2020)</h3>
+  <p><strong>Switch Expressions (standard):</strong> yield keyword for returning values from switch. Use case: functional expressions, cleaner pattern matching.</p>
+  <p><strong>Records (standard in 16):</strong> Compact syntax for immutable value types with component accessors. Use case: data transfer, immutable domain objects.</p>
+  <p><strong>Pattern Matching (preview):</strong> instanceof with type casting in one step. Use case: type-safe downcasting, visitor patterns.</p>
+  <p><strong>NullPointerException Messages:</strong> Detailed messages showing which variable caused the exception. Use case: faster debugging.</p>
+
+  <h3>Java 15 (2020)</h3>
+  <p><strong>Text Blocks (standard):</strong> Triple-quoted multi-line strings. Use case: SQL, JSON, embedded templates without escaping.</p>
+  <p><strong>Records (second preview):</strong> Local record classes, sealed records. Use case: record-based encapsulation.</p>
+  <p><strong>Hidden Classes:</strong> Runtime-generated classes not discoverable via reflection. Use case: bytecode frameworks, runtime generation.</p>
+  <p><strong>Sealed Classes (preview):</strong> Restrict which classes can extend/implement. Use case: controlled hierarchies, domain modeling, exhaustive pattern matching.</p>
+
+  <h3>Java 16 (2021)</h3>
+  <p><strong>Records (finalized):</strong> Final form with canonical constructor refinement. Use case: immutable data modeling, reducing boilerplate.</p>
+  <p><strong>Pattern Matching (instanceof finalized):</strong> instanceof + cast combined. Use case: type narrowing without separate casts.</p>
+  <p><strong>Sealed Classes (second preview):</strong> permits clause finalization. Use case: inheritance control.</p>
+  <p><strong>Strongly Encapsulated JDK Internals:</strong> sun.misc.Unsafe and other internals no longer accessible. Use case: enforcing API contracts.</p>
+
+  <h3>Java 17 (2021, LTS)</h3>
+  <p><strong>Sealed Classes (finalized):</strong> Full control over class hierarchies via permits clause. Use case: API design, domain modeling, exhaustive pattern matching.</p>
+  <p><strong>Pattern Matching (switch preview):</strong> Pattern matching in switch expressions. Use case: powerful type and value-based dispatch.</p>
+  <p><strong>Foreign Function &amp; Memory API (preview):</strong> Safer access to native memory and functions. Use case: JNI replacement, off-heap memory, low-level operations.</p>
+  <p><strong>Deprecation of Applet API:</strong> Legacy Applet classes removed. Use case: modernization, removing legacy code.</p>
+
+  <h3>Java 18-20 (2022-2023)</h3>
+  <p><strong>Pattern Matching (switch finalized in 21):</strong> Full pattern matching in switch with guards. Use case: complex type-based logic, cleaner dispatch.</p>
+  <p><strong>Record Patterns (preview):</strong> Destructuring records in patterns. Use case: extracting record fields in switch/if.</p>
+  <p><strong>Virtual Threads (preview, Project Loom):</strong> Lightweight threads for high-concurrency applications. Use case: millions of concurrent tasks without thread pool overhead.</p>
+  <p><strong>Structured Concurrency (preview):</strong> Parent-child task relationships, automatic cleanup. Use case: cancellation propagation, error handling in concurrent code.</p>
+
+  <h3>Java 21 (2023, LTS)</h3>
+  <p><strong>Virtual Threads (finalized):</strong> Lightweight thread implementation improving scalability. Use case: high-throughput servers, reactive-like concurrency with blocking code.</p>
+  <p><strong>Pattern Matching (finalized):</strong> instanceof and switch patterns, record patterns. Use case: exhaustive type handling, cleaner conditionals.</p>
+  <p><strong>Record Patterns (finalized):</strong> Destructure records in patterns for field access. Use case: nested record unpacking, cleaner data extraction.</p>
+  <p><strong>Generational ZGC:</strong> Low-latency garbage collector with generational support. Use case: applications requiring sub-millisecond pause times.</p>
+  <p><strong>Unnamed Variables &amp; Patterns:</strong> Use _ for unused variables. Use case: ignoring exception parameters, unused fields, cleaner code.</p>
+  <p><strong>Structured Concurrency (finalized):</strong> Scope-based task management with automatic cancellation. Use case: reliable concurrent code, error propagation.</p>
+
   <h2>Exceptions, I/O &amp; Serialization</h2>
 
   <h3>Exception Handling</h3>
