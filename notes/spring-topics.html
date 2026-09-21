@@ -190,7 +190,12 @@
 <p>Spring's validation annotation supporting validation groups. Use case: method-level validation, validation groups, complex validation scenarios.</p>
 
 <h3>HandlerInterceptor</h3>
-<p>Intercepts requests before/after handler execution. Use case: authentication, logging, request preprocessing, response modification.</p>
+<p>Intercepts requests before/after handler execution. Use case: authentication, logging, request preprocessing, response modification. Sits in the Spring servlet chain after the DispatcherServlet, so it has access to Spring beans and the request context, unlike servlet filters. Implement <code>preHandle</code> to run before the handler, <code>postHandle</code> after a successful handler return, and <code>afterCompletion</code> after the response is written for cleanup.</p>
+
+<figure class="note-figure">
+  <img src="assets/img/spring-mvc-request-flow-diagram.png" alt="Spring MVC request flow showing HTTP request through Servlet Container, Servlet Filter, DispatcherServlet, HandlerInterceptor, and Controller">
+  <figcaption>Spring MVC request flow lifecycle</figcaption>
+</figure>
 
 <figure class="note-figure">
   <img src="assets/img/filter-vs-spring-interceptor-vs-feign-interceptor-comparison.png" alt="Comparison table of Servlet Filter, Spring HandlerInterceptor, and Feign Interceptor">
