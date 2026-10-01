@@ -1,0 +1,144 @@
+<div class="section-header">
+  <div class="tag">Behavioral</div>
+  <h1>🗣️ Stories</h1>
+  <p>17 curated stories across 4 features. Frame each one to match whatever the question asks (leadership, debugging, learning, conflict, etc).</p>
+</div>
+
+<div class="note-body">
+
+<h2>Appraisal</h2>
+
+<div class="story-block">
+  <h3>Designing systems so two related but different write paths can never collide</h3>
+  <p>So on the appraisal side of the project I worked on, we had two different ways an appraisal could get saved. If a user paid for a full report, that result went into a permanent history table, and since it was tied to billing, it had to stay correct forever. But if someone was just browsing for free, we still wanted to save that estimate in a cache so we didn't have to recompute it every time, and that cache was meant to be temporary, not something we fully trusted.</p>
+  <p>The risk I saw was that both of these look like the same action, saving an appraisal. So it would've been easy for me to let them share the same code. And if that ever happened, a free browsing request could accidentally write into the paid table, or a paid write could get overwritten by unrelated cache traffic, which I really didn't want to risk.</p>
+  <p>So instead of one shared service with a simple check for whether it was a paid request, which looks fine at first but breaks once someone adds new logic to one side without thinking about the other, I split the two into completely separate modules. That way, crossing that boundary meant adding a new dependency on purpose, not just writing a few lines in the wrong place.</p>
+  <p>It's worked well since then. The two systems have run side by side without a single case of one leaking into the other.</p>
+</div>
+
+<div class="story-block">
+  <h3>PDF download returning 404 even though the file existed</h3>
+  <p>We had a bug where users would click to view a PDF appraisal report they'd already generated, and it would just throw a 404, even though we could see the file sitting right there in blob storage. So the URL looked valid on the surface, but it wasn't resolving.</p>
+  <p>Instead of jumping into the URL building code and guessing, I went into the storage console first and manually checked where the blob actually lived. Turned out the PDF was uploaded to one storage account, but the code building the download URL was pointing at a different, similarly named account. Since we only ever saved the blob filename and built the actual signed URL at read time from config plus that filename, the bug surface was small once I found the real location, it was really just a one line config fix, not any real logic problem.</p>
+  <p>Once I fixed the account name, PDFs started resolving fine again. What I took from it was to always check the actual runtime state first before touching code, because it's really easy to spend hours debugging perfectly fine URL logic when the real issue is just a mismatched config value somewhere.</p>
+</div>
+
+<div class="story-block">
+  <h3>Payment status stuck on Pending despite payment already being deducted</h3>
+  <p>A bug came in saying appraisals that had already been paid for were still showing as Pending in the history table, even though the payment transaction id was clearly there on the record. That's a pretty bad look for customers, seeing a Pending status on something they already paid for, so I had to drop what I was doing and pick this up right away that sprint.</p>
+  <p>When I traced the status update logic, I found it was just unconditionally defaulting to Pending no matter what, there wasn't even a branch checking whether a payment id existed. So it wasn't really a broken check, it was a missing one. I fixed that by adding the check for a payment transaction id and setting the status to FormDataReady when it was present, and I made sure that check ran against the same row the payment write had just committed, not a fresh read that might catch it before the write landed.</p>
+  <p>Once that was in, the status started reflecting reality correctly. It was a small fix once I actually traced it, so I was able to get back to my original priorities the same day.</p>
+</div>
+
+<div class="story-block">
+  <h3>Noticing two endpoints were silently not being tracked for billing</h3>
+  <p>While I was working on something completely unrelated, I noticed two endpoints, one for land comps and one for plex comps, were computing a result and just throwing it away, unlike the main appraisal endpoint which properly saved every request into the paid history table.</p>
+  <p>Nobody had asked me to fix this, but it meant billable work wasn't being tracked consistently, and that's a real business risk, not just messy code. So I flagged it to the team first, and then took it on myself to bring both endpoints in line with what the main appraisal endpoint already did. I reused the same historyService.saveAppraisal call instead of writing something new, so both endpoints automatically got the same retry behavior and the same critical log alert on failure that the main endpoint already had.</p>
+  <p>After that, both endpoints were properly recorded, which closed a real gap. I think it's a good example of noticing drift in a codebase and choosing to fix it the same way the rest of the system already worked, instead of introducing yet another pattern.</p>
+</div>
+
+<div class="story-block">
+  <h3>Land appraisals not fitting an existing schema</h3>
+  <p>We got asked to support land appraisals using the same appraisal and comp tables we already had for residential and commercial properties. The problem was land data doesn't have an ARV, doesn't have bedrooms or bathrooms, doesn't have any of the adjustment breakdown the other two property types rely on. There wasn't a clear answer on how this should map into our schema, so it was really on me to make that call.</p>
+  <p>I decided to reuse the existing tables instead of building a third schema just for land. I mapped over the fields that did apply, like as-is value and lot size, and just left the rest null on purpose, the same way the commercial engine already left some residential-only columns null. The alternative was a whole separate schema, and that would've meant a third set of joins for every report or query that needed to work across property types, for a property type that honestly made up a small share of our volume.</p>
+  <p>Land support ended up shipping without forking the schema, and we kept one consistent set of tables for all three types. It taught me that when a data shape doesn't fit cleanly, it's worth documenting exactly which columns are intentionally null and why, so it doesn't look like a bug to someone reading it later.</p>
+</div>
+
+<div class="story-block">
+  <h3>Choosing a full replace instead of a diffing approach for comps</h3>
+  <p>Every time an appraisal got refreshed, we had to update the list of comparable properties in the database, and I had to decide between writing logic that diffs the old and new comp lists and only updates what changed, or just wiping everything and inserting the new set fresh.</p>
+  <p>Diffing sounds more precise, but the problem is comps don't have a stable key across refreshes, the set can shrink, grow, or completely reorder between runs. I went with delete and reinsert instead, mainly because comp counts are small, usually single digits to low tens, so the performance hit of a full replace is basically nothing. It also avoided a whole class of bugs a diffing approach would've introduced, like two unrelated comps accidentally matching because they shared an address after a resale. I relied on the foreign key's cascade delete from the parent appraisal, so doing the delete and reinsert inside one transaction couldn't leave any orphaned comp rows behind.</p>
+  <p>The refresh logic stayed simple and correct this way, and honestly, looking back, building a more precise diffing system would've added real complexity for basically no benefit given how small these datasets actually are.</p>
+</div>
+
+<div class="story-block">
+  <h3>Explaining why a cache miss must never be able to trigger a charge</h3>
+  <p>Our product stakeholders wanted the free browsing experience to feel fast and seamless, and at one point someone suggested simplifying the backend by letting the free cache path and the paid history path share more logic, just to save engineering time. I needed to explain to a non-technical stakeholder why that was actually risky, not just an engineering preference.</p>
+  <p>So instead of talking about architecture, I framed it around what could actually go wrong. If these two systems ever shared a write path and a bug slipped through, a customer just browsing for free could end up accidentally charged, or worse, a paying customer's record could get silently overwritten by free traffic. I explained that keeping them in fully separate modules was a small amount of extra engineering work that removed that entire risk permanently, instead of just making it less likely.</p>
+  <p>The stakeholder agreed keeping the separation was worth it. What made it land was framing the risk around money and trust rather than code structure, since that's what actually mattered to them.</p>
+</div>
+
+<h2>Mashvisor API / Caching Layer</h2>
+
+<div class="story-block">
+  <h3>A cache miss ends up racing to write the same row</h3>
+  <p>I was building a caching layer for a report pipeline that fired about 20 parallel API calls, and under load I started seeing occasional constraint-violation exceptions. Turned out two of those parallel calls could ask for the same neighborhood data at almost the same moment, both find nothing cached, and both try to insert, a classic race.</p>
+  <p>I didn't want to reach for a distributed lock, since that slows down every write just to guard against a rare collision. Instead I leaned on the database itself: the cache key already had a unique constraint, so I let the first insert win and caught the failure on the second one as an expected signal rather than an error. The catch had to run in its own transaction, though, since once JPA hits a constraint violation it marks the whole transaction rollback-only, so the retry needs a clean one to actually succeed.</p>
+  <p>Once that was in place, the race completely disappeared with zero added latency on the happy path. It was a good reminder that the database's own constraints are often the simplest concurrency guard you have.</p>
+</div>
+
+<div class="story-block">
+  <h3>Cutting redundant API calls to zero for repeat property lookups</h3>
+  <p>Our reporting pipeline was making around 20 calls to a paid third party real estate API for every single report, even when we'd just looked up that same property, or the same city and neighborhood data, minutes earlier. I needed to cut that down without touching all 20 call sites individually, since that would've been risky and a pain to maintain.</p>
+  <p>I ended up building the cache as a decorator over the one shared transport interface all those calls funneled through, so wrapping that single method automatically covered all 20 endpoints without me touching a single call site. The trickier part was freshness. I split it into two separate checks, whether we even had the right id to call the endpoint, and separately, whether the cached data for that id was still fresh. Having a valid id doesn't tell you anything about whether a specific field is stale, so combining those into one check would've made a stale record look identical to a missing one.</p>
+  <p>After that, repeat lookups for fresh data dropped to zero external calls, which cut both cost and latency. And if just one field went stale, only that one endpoint refetched instead of the entire report recomputing from scratch.</p>
+</div>
+
+<div class="story-block">
+  <h3>The caching kill switch had no fallback for its own database failing</h3>
+  <p>I built a kill switch for our caching layer using a simple config flag, so we could turn caching off entirely if needed. During review, a teammate asked a question I hadn't fully thought through, what happens if the caching database itself goes down, since the app still depended on that DataSource being created at startup.</p>
+  <p>That was a fair catch. Just because the feature was optional at the config level didn't mean the app could actually start cleanly if the cache database was unreachable, because the DataSource bean was still being created regardless of the flag. I went back and made sure that bean was only instantiated when the flag was actually true, using ConditionalOnProperty, so flipping it off completely removed the attempt to connect, instead of creating the connection eagerly and just not using it.</p>
+  <p>That closed a real gap. The kill switch wasn't just a behavior flag anymore, it genuinely removed the dependency on that database when turned off. It taught me to think through failure of my own infrastructure too, not just the systems I'm calling out to.</p>
+</div>
+
+<div class="story-block">
+  <h3>Adding caching to a pipeline with 20 different call sites</h3>
+  <p>I got asked to add caching to a report pipeline that made about 20 different calls to a third party API, spread across several endpoint classes I hadn't written myself. My first instinct wasn't to start wrapping individual call sites, it was to actually understand how these calls flowed through the system.</p>
+  <p>So I traced through the code, and it turned out every one of those 20 calls, no matter which endpoint class triggered it, ultimately funneled through one shared transport interface with a single method. That was the natural place to add caching, as a decorator around that one method, instead of touching 20 separate places. A decorator like that is invisible to every caller, so nothing at the call sites needed to change at all.</p>
+  <p>I ended up adding caching with zero changes to any of the 20 existing endpoint classes, and the only reason that worked was because I spent time understanding the actual call graph before writing a single line of caching logic.</p>
+</div>
+
+<h2>Chat</h2>
+
+<div class="story-block">
+  <h3>The 30 to 60 second chat operation slowdown</h3>
+  <p>During UAT, something as basic as sending or deleting a chat message was taking 30 to 60 seconds, which made the whole feature look completely broken, even though nothing was actually throwing errors. I had to figure out where the time was actually going, because it clearly wasn't one single slow query, it felt more systemic than that.</p>
+  <p>I turned on Hibernate's SQL logging locally and ran EXPLAIN ANALYZE against a dataset close to UAT size, instead of just eyeballing the JPQL, since query plans can look totally fine on a small local dataset and still fall apart once row counts grow. That showed a pattern of redundant queries piling up across message, attachment, session, and participant lookups, basically an N+1 problem from lazy loaded associations. I combined several separate writes into single transactions, merged the redundant lookups into joined queries, and reordered things so cheap checks like authorization ran before any database call at all.</p>
+  <p>That brought the operation down from 30 to 60 seconds to under 2 to 3 seconds. I also found a few correctness bugs hiding behind the slowness along the way, like a delete endpoint that was returning the wrong status code.</p>
+</div>
+
+<div class="story-block">
+  <h3>Reworking transactional boundaries to eliminate a partial write risk</h3>
+  <p>In our message send flow, saving the new message and updating the parent session's last message timestamp were happening as two separate database writes. That meant if something failed in between those two steps, we could end up with inconsistent data, a message that exists but a session that doesn't reflect it.</p>
+  <p>I wanted both writes to succeed or fail together, but without slowing down a code path that gets hit constantly. So I combined the message insert and the session update into a single write inside one transaction boundary. I also added optimistic locking on the session's last message timestamp using a version column, so if two sends landed at nearly the same time, the second one would get an exception instead of silently overwriting the first, and the caller could just retry. I went with optimistic locking instead of a row lock here because sends happen often and are quick, and locking the row for the whole write would've serialized unrelated sends to the same session for no real reason.</p>
+  <p>The send path ended up both faster, since it's fewer round trips, and safer, since a partial write can't happen anymore. It also closed a subtle bug where sessions could show stale last message data under concurrent sends.</p>
+</div>
+
+<div class="story-block">
+  <h3>Building enquiry sessions when the data model assumed a transaction always existed</h3>
+  <p>We got a request to let a user start a chat with a transaction coordinator before any actual real estate transaction existed in the system yet. The problem was, our entire chat data model, session creation, attachment lookups, all of it, had been built assuming a transaction id was always there. The requirement itself was pretty high level, just make chat work without a transaction, and I had to figure out everything that actually meant on my own.</p>
+  <p>I made the transaction id nullable across the schema and every place that read it, but that alone wasn't enough, since a nullable column doesn't stop a join or role lookup written against the old assumption from just silently returning nothing. So I went through session listing, closing, reopening, and attachment lookups one at a time, fixing every spot that assumed a transaction existed. I also had to build new role resolution logic for these sessions, since the old logic figured out a user's role from the transaction itself, which obviously didn't apply here anymore.</p>
+  <p>Enquiry sessions ended up working correctly across every existing chat feature without scattering special case checks everywhere. It gave me a pattern I still use, trace every consumer of an assumption before you change it, instead of just patching the entry point and hoping the rest holds up.</p>
+</div>
+
+<div class="story-block">
+  <h3>Changing an endpoint's status codes without breaking existing consumers</h3>
+  <p>We had an endpoint that other services called, and it always returned a 200 no matter what actually happened internally. That meant none of those consumers could tell a real failure apart from a success. The plan was simple at first, just start returning proper status codes, but partway through I realized some of those consumers might already have fragile logic built around always getting a 200 with a specific response shape.</p>
+  <p>So I changed the approach to guarantee the response body itself never changed shape, only the status code would change. I scoped a RestControllerAdvice specifically to that one controller using assignableTypes, so existing consumers parsing the body wouldn't break even if they hadn't updated their status code handling yet, and no other controller's error handling got touched by this new advice bean.</p>
+  <p>We shipped more accurate error signaling without needing a coordinated rollout across every team consuming that endpoint, which wasn't the original simpler plan, but turned out to be the safer one given what was actually at stake for other teams.</p>
+</div>
+
+<h2>Notifications</h2>
+
+<div class="story-block">
+  <h3>Publishing notifications synchronously blocked message sends under broker slowness</h3>
+  <p>While building our notification pipeline on Kafka, I noticed the message send flow was calling the notification publish step synchronously, right inline with the main request. Under load, if the broker got slow, that could add up to 30 seconds of delay to something as simple as sending a chat message. Not everyone on the team initially thought this was worth changing.</p>
+  <p>So I laid out the actual failure scenario plainly. If Kafka ever got briefly slow or unavailable, the producer blocking on an ack would directly block core chat sends, and that's a much worse experience than a notification just arriving a second or two late. I proposed making that publish call fire and forget using Async, catching and logging any failure inside that async method instead of letting it bubble back to the caller, so a broker hiccup could never turn into a failed message send.</p>
+  <p>We aligned on that and converted the call to Async. It decoupled the reliability of a secondary system, notifications, from the reliability of the core feature, sending messages, which everyone agreed afterward was clearly the right tradeoff.</p>
+</div>
+
+<div class="story-block">
+  <h3>Fixing a bean initialization order bug affecting monitoring, not just my feature</h3>
+  <p>While I was working on notification delivery, I happened to notice our application performance monitoring logs had a gap right after startup. That had nothing to do with what I was actually building, but nobody had looked into it yet, and it meant we had a blind spot in our observability that could hide real problems down the line.</p>
+  <p>I dug into it anyway, and it turned out to be a Spring bean initialization order issue. A log clearing configuration bean was running after the APM appender had already registered, which basically wiped out its earliest logs, since Spring doesn't guarantee bean creation order unless you explicitly declare the dependency. I fixed it by adding an explicit DependsOn so the log clearing step ran before the APM appender registered, instead of leaving it to implicit ordering.</p>
+  <p>The logging gap disappeared after that. It wasn't part of my assigned work at all, but fixing it meant the whole team had reliable monitoring going forward, and that felt worth prioritizing the moment I spotted it.</p>
+</div>
+
+<div class="story-block">
+  <h3>Choosing Spring's caching abstraction over a hand rolled cache map for notification templates</h3>
+  <p>A teammate had built our notification template lookup using a hand rolled ConcurrentHashMap as an in memory cache. My concern was that this was reinventing something Spring already handles well, and that it would eventually need the same kind of invalidation logic anyway, just built by hand. I wanted to move it over to Spring's Cacheable and CacheEvict annotations, but they felt the map based approach was simpler and already working fine.</p>
+  <p>So instead of just arguing about it, I walked them through a concrete scenario. If someone edited a template after the app had already started, that edit wouldn't show up until a full restart, because the hand rolled map only ever loaded on startup and had no real eviction path. I proposed using Cacheable and CacheEvict together with an authenticated reload endpoint that could evict the cache and push that invalidation out to every instance over Redis pub sub, since CacheEvict by itself only clears the cache on whichever instance handled that specific request.</p>
+  <p>We ended up going with the Spring Cache approach. It solved the stale template problem cleanly, and it also removed a good chunk of manual cache management code we would've had to keep maintaining ourselves.</p>
+</div>
+
+</div>
