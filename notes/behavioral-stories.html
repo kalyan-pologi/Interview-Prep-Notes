@@ -69,6 +69,10 @@
 
 <h2>Mashvisor API / Caching Layer</h2>
 
+<div class="context-block">
+  <p><strong>What is Mashvisor:</strong> A third-party real estate data API providing rental market analytics and investment metrics. The rentability tab displays rent estimates, cash-on-cash return, and short-term/long-term rental comps, all powered by Mashvisor. Each API call costs 2-5 cents, and the system makes about 20 parallel calls per property view. Without caching, this adds significant latency (8-12 seconds) and costs roughly $300-800 monthly. The caching layer sits between our app and Mashvisor, reducing redundant calls while managing freshness tradeoffs since different metrics (rent estimates vs comps) age at different rates.</p>
+</div>
+
 <div class="story-block">
   <h3>A cache miss ends up racing to write the same row</h3>
   <p>I was building a caching layer over Mashvisor, the third party API behind our rentability tab, which shows rent estimates, cash on cash return, and short and long term rental comps when a user opens a property. Loading that tab fired around 20 parallel API calls, and under load testing I started seeing intermittent constraint violation exceptions, roughly 1 to 2 percent of loads failing outright. Two parallel calls could ask for the same neighborhood data within milliseconds, since neighborhood metrics get reused across nearby properties, both would find nothing cached, and both would try to insert. A classic race, and each one failed the whole tab rather than one metric.</p>
@@ -104,6 +108,10 @@
 
 <h2>Chat</h2>
 
+<div class="context-block">
+  <p><strong>What is Chat:</strong> A real-time messaging platform where brokers, lenders, buyers, and transaction coordinators coordinate on live real estate deals. Users can send and delete messages, attach documents, create sessions tied to transactions, and manage participants with different roles. Sessions persist full conversation history, support concurrent sends, and include features like enquiry sessions that can exist before a formal transaction starts. Performance is critical since users expect sub-second send operations, and any slowdown (30-60 seconds) breaks the core feature and kills deals.</p>
+</div>
+
 <div class="story-block">
   <h3>The 30 to 60 second chat operation slowdown</h3>
   <p>During UAT, something as basic as sending or deleting a chat message was taking 30 to 60 seconds. Nothing was throwing errors, it was just unusably slow. On a platform where a few hundred chat sessions a day are how brokers, lenders and buyers coordinate on live deals, that's the core feature looking completely broken, and it got flagged as a release blocker that would've slipped the chat launch by at least a sprint.</p>
@@ -137,6 +145,10 @@
 </div>
 
 <h2>Notifications</h2>
+
+<div class="context-block">
+  <p><strong>What are Notifications:</strong> An asynchronous messaging system handling 164+ notification types across brokers, lenders, buyers, and transaction coordinators. Built on Azure Service Bus with command-style messaging and delivery guarantees, notifications cover events like signup, document submission, and account approval. Each notification can be delivered via Email, SMS, or In-App, with templates stored in the database (not code) and loaded into Redis at startup. Templates are edited without deploys, invalidated across all instances via Redis pub-sub, and failures are captured via Service Bus dead lettering for replay and audit.</p>
+</div>
 
 <div class="story-block">
   <h3>Publishing notifications synchronously blocked message sends under broker slowness</h3>
