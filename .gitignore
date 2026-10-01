@@ -1,2 +1,7 @@
 .DS_Store
 Thumbs.db
+
+# Local-only source material
+interview-prep.md
+Project_Documentation.docx
+Project_Documentation_WITH_BEHAVIORAL.txt
