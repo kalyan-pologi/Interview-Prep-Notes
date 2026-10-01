@@ -117,10 +117,9 @@ telemetry, clickstream, IoT       commands, orders, workflow steps</code></pre>
     <div class="followup-item">
       <div class="fq">1. Which Azure services have you worked with and what for?</div>
       <div class="fa">Mainly App Service for hosting our Spring Boot microservices, Azure SQL as
-        the primary relational store, Blob Storage for generated PDF reports and documents, Event
-        Hubs as a Kafka-compatible broker for notification and appraisal events, and Application
-        Insights for tracing and monitoring. Alongside those, Key Vault for secrets and Azure
-        DevOps pipelines for CI/CD.</div>
+        the primary relational store, Blob Storage for generated PDF reports and documents, Service
+        Bus topics for the notification pipeline, and Application Insights for tracing and
+        monitoring. Alongside those, Key Vault for secrets and Azure DevOps pipelines for CI/CD.</div>
     </div>
     <div class="followup-item">
       <div class="fq">2. What is a resource group and why does it matter?</div>
@@ -319,10 +318,10 @@ telemetry, clickstream, IoT       commands, orders, workflow steps</code></pre>
   </div>
 
   <div class="story-block">
-    <h3>5. Fire-and-forget notification publishing to Kafka-compatible Event Hubs</h3>
+    <h3>5. Fire-and-forget notification publishing to Service Bus</h3>
     <div class="star-row"><span class="star-label">Situation:</span> A message send was calling the notification publish step synchronously, so if the broker was ever slow, that delay added directly onto a core chat send.</div>
     <div class="star-row"><span class="star-label">Task:</span> Decouple the reliability of a secondary system, notification delivery, from the reliability of the core feature.</div>
-    <div class="star-row"><span class="star-label">Action:</span> I converted the publish call to fire-and-forget using Async, with failures caught and logged inside that method instead of propagated back to the caller, before those events flow through Event Hubs to email, SMS, and in-app delivery.</div>
+    <div class="star-row"><span class="star-label">Action:</span> I converted the publish call to fire-and-forget using Async, with failures caught and logged inside that method instead of propagated back to the caller, before those events flow through Service Bus topics to email, SMS, and in-app delivery.</div>
     <div class="star-row"><span class="star-label">Result:</span> A broker hiccup can no longer surface as a failed message send, which matters more once you're relying on a managed event pipeline you don't fully control end to end.</div>
   </div>
 

@@ -14,30 +14,34 @@
     data other teams rely on, reliability and data correctness have been a constant theme across
     everything I've built there.</p>
   <p>On the appraisal side, I designed and built a dual persistence architecture in Java and Spring
-    Boot. The platform needed two different ways of handling appraisal data, a paid permanent
-    history record that gets billed, and a free reusable cache for browsing that shouldn't be
-    recomputed or recharged on every view. These two write paths could never share a code path, so
-    I enforced that separation at the module level using two separate Spring Boot starter
-    libraries. I also reconciled two structurally different valuation engines into a single shared
-    schema using a normalizer, and extracted the core valuation logic into a shared service so both
-    flows could reuse it without changing the paid endpoint's behavior at all, which I verified
-    with before and after comparison tests since that endpoint was billing relevant.</p>
+    Boot. Reports are billed in credits, and the roughly 5,000 properties already cached in our
+    database are free to report on, so the platform needed two different write paths: a permanent
+    credit charged history record that has to stay auditable, and a free reusable cache for the
+    properties we already hold. Those two paths could never share a code path, since a leak either
+    way means burning a customer's credits or overwriting a paid record, so I enforced the
+    separation at the module level using two separate Spring Boot starter libraries. I also
+    reconciled two structurally different valuation engines into a single shared schema using a
+    normalizer, and extracted the core valuation logic into a shared service so both flows could
+    reuse it without changing the paid endpoint's behavior at all, which I verified with before and
+    after comparison tests since that endpoint was billing relevant.</p>
   <p>I also built a real time chat and notifications system from scratch on Spring Boot, the data
     model, the messaging domain logic, and the real time transport layer, using WebSocket and
-    Kafka, so notifications dispatched asynchronously never blocked a core action like sending a
-    message. I owned that system end to end, including a performance investigation that brought
-    core chat operations from 30 to 60 seconds down to under 2 to 3 seconds.</p>
-  <p>Separately, I built a caching layer over a third party real estate data API using Spring
-    WebFlux, since a single report required around 20 outbound calls, many of them for data that
-    gets reused across different properties. I designed it as a decorator wrapping one shared
-    transport interface, so it covered all 20 endpoints without touching any individual call site,
-    which cut redundant external calls down to zero for repeat property lookups.</p>
+    Azure Service Bus, so notifications dispatched asynchronously never blocked a core action like
+    sending a message. I owned that system end to end, including a performance investigation that
+    brought core chat operations from 30 to 60 seconds down to under 2 to 3 seconds.</p>
+  <p>Separately, I built a caching layer over Mashvisor, the third party data provider behind our
+    rentability tab, using Spring WebFlux. Loading that tab required around 20 outbound calls, many
+    of them for neighborhood level data that gets reused across nearby properties. I designed it as
+    a decorator wrapping one shared transport interface, so it covered all 20 endpoints without
+    touching any individual call site, which cut redundant external calls down to zero for repeat
+    property lookups.</p>
 
   <hr>
 
   <h2>Appraisal</h2>
-  <p>This is the part of the platform that generates property appraisals, either a full residential or commercial valuation, or a quick comp based estimate. There are two ways an appraisal can get saved. If a user actually pays for a report, that result goes into a permanent history table, since it's tied to billing and needs to stay correct and auditable forever. If someone is just browsing a property for free, we still save an estimate, but into a separate cache that's meant to be temporary and reusable, not something we fully trust the way we trust the paid history.</p>
-  <p>I worked on keeping these two paths completely separate so a bug in one could never accidentally affect the other, on reconciling two different valuation engines (residential and commercial) that produce structurally different data into one shared schema, and on various data correctness issues around comps, payment status, and PDF report generation.</p>
+  <p>This is the part of the platform that generates property valuation reports. We support residential, commercial, land, multiplex, duplex and triplex property types. Report generation uses a KNN model to select the 6 most comparable properties to the subject, then runs weighted and adjusted calculations across those comps to arrive at a value, with agents and an LLM handling the report write up itself. A residential report comes out around 5 pages and 1 to 5MB, a commercial one is closer to 50 pages and 10 to 30MB, and both get stored in a blob container.</p>
+  <p>Billing runs on credits, 50 credits for $20, with a residential report costing 10 credits and a commercial one 30. The exception is the roughly 5,000 properties already sitting in our database with cached valuations, which are free to report on. So there are two save paths: credit charged reports go into a permanent history table that's tied to billing and has to stay auditable forever, and free cached properties go into a separate reusable cache.</p>
+  <p>I worked on keeping those two write paths completely separate so a bug in one could never burn a customer's credits or overwrite a paid record, on reconciling the residential and commercial engines which produce structurally different output into one shared schema, and on various data correctness issues around comps, payment status and PDF delivery.</p>
 
   <blockquote>Background context only, below. This is the valuation logic the appraisal engines actually run under the hood, not something I owned myself, but useful if an interviewer digs into how the system actually computes a value.</blockquote>
 
@@ -58,15 +62,17 @@
   </div>
 
   <h2>Mashvisor API / Caching Layer</h2>
-  <p>Generating a full investment report means calling a third party real estate data provider, Mashvisor, around 20 times for things like rental estimates, neighborhood data, and comp information. A lot of that data doesn't change often, and the same property or neighborhood gets looked up again and again, so calling the API fresh every single time was slow and expensive.</p>
-  <p>I built a caching layer in front of those calls so repeat lookups could be served from our own database instead of hitting the external API again. It's designed as a decorator around one shared interface, so it covers all 20 endpoints without needing to touch each call site individually, and it tracks freshness independently per endpoint since different types of data go stale at different rates. This is also where I dealt with concurrency issues, like two parallel requests racing to cache the same property at the same time.</p>
+  <p>When a user opens a property, they get a set of tabs covering cost, appraisal, rentability, crime rate, schools and neighborhood details. The rentability tab is backed by Mashvisor, a third party real estate data provider, and it shows metrics like rent estimates, cash on cash return, and short term and long term rental comps. Loading that tab meant around 20 calls out to Mashvisor, and since the same property or neighborhood gets viewed repeatedly, we were paying for and waiting on data we'd often just fetched.</p>
+  <p>I built a caching layer in front of those calls so repeat views could be served from our own database. It's a decorator around one shared transport interface, so it covers all 20 endpoints without touching individual call sites, and it tracks freshness independently per endpoint since rent estimates and rental comps go stale at very different rates. This is also where I dealt with concurrency, like two parallel requests racing to cache the same neighborhood data at once.</p>
 
   <h2>Chat</h2>
   <p>This is the real time messaging system that lets the different people on a deal, brokers, lenders, transaction coordinators, and buyers, communicate directly inside the platform. I built this from scratch, the data model, the messaging logic, and the real time transport layer using WebSocket.</p>
   <p>Beyond just building the core feature, I owned it end to end in production, which meant handling performance problems as the system scaled, fixing data consistency issues around concurrent message sends, and extending the chat model to support cases the original design hadn't planned for, like letting someone message a transaction coordinator before an actual deal even existed in the system.</p>
 
   <h2>Notifications</h2>
-  <p>Whenever something relevant happens, a new message, a status change, an update on a deal, the platform needs to notify the right people. This runs on Kafka as an event driven pipeline, so the service that triggers an event doesn't have to wait around for the notification to actually be delivered.</p>
-  <p>A lot of my work here was about making sure notifications never became a liability for the rest of the system, keeping notification delivery decoupled from core actions like sending a message so a slow notification system could never block something time sensitive, and keeping notification templates and delivery logic consistent and easy to update without needing a full redeploy.</p>
+  <p>We have 164 plus notification types across the four roles on the platform, brokers, lenders, buyers and transaction coordinators. They cover the full lifecycle, user signup, financial documents being submitted, a broker or lender or buyer account getting approved, and plenty more, each deliverable over Email, SMS or In-App with per-user preference checks deciding which channels actually fire. It's event driven on Azure Service Bus topics, so whatever triggers an event doesn't wait around for delivery.</p>
+  <p>One decision I'd call out is that no notification message is hardcoded. All 164 plus templates live in the database and get loaded into Redis at startup, so messages are fetched from Redis on the fly at send time. Changing wording is a database update, not a code change and deploy, which matters when you have this many message types and non engineers who need to tweak copy.</p>
+  <p>Most of my work here was about keeping notifications from becoming a liability for the rest of the system, decoupling delivery from core actions like sending a chat message so a slow broker could never block something time sensitive, and making sure template updates propagate across every running instance rather than just the one that handled the request.</p>
+  <blockquote>On why Service Bus rather than Kafka or Event Hubs: a notification is a command, send this to this user, not a stream anyone needs to replay. Service Bus gives per message delivery guarantees, dead lettering and retry natively, and topics with subscriptions fan one event out to the Email, SMS and In-App handlers cleanly. A partitioned log with consumer offsets would have added operational weight for replay semantics we'd never use, and re-sending a two week old account approval would be a bug rather than a feature.</blockquote>
 
 </div>

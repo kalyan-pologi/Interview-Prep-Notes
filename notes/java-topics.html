@@ -393,7 +393,7 @@
 
   <div class="story-block">
     <h3>3. Async decoupling a core action from a secondary system's health</h3>
-    <div class="star-row"><span class="star-label">Situation:</span> A message send was calling a notification publish step synchronously, so a slow Kafka broker directly added latency to sending a message.</div>
+    <div class="star-row"><span class="star-label">Situation:</span> A message send was calling a notification publish step synchronously, so a slow Service Bus broker directly added latency to sending a message.</div>
     <div class="star-row"><span class="star-label">Task:</span> Stop a secondary system's slowness from degrading a core feature.</div>
     <div class="star-row"><span class="star-label">Action:</span> I converted the publish call to fire-and-forget using @Async, with failures caught and logged inside that method rather than propagated to the caller.</div>
     <div class="star-row"><span class="star-label">Result:</span> The core send path's latency became independent of the messaging system's health, which is the real value of Async, decoupling reliability, not just moving work off a thread.</div>
@@ -417,7 +417,7 @@
 
   <div class="story-block">
     <h3>6. Immutable objects and thread safety in a concurrent notification pipeline</h3>
-    <div class="star-row"><span class="star-label">Situation:</span> Notification events flowing through Kafka consumers needed to be safely read by multiple concurrent handlers without defensive copying at every step.</div>
+    <div class="star-row"><span class="star-label">Situation:</span> Notification events flowing through Service Bus consumers needed to be safely read by multiple concurrent handlers without defensive copying at every step.</div>
     <div class="star-row"><span class="star-label">Task:</span> Avoid a class of concurrency bugs where one handler's mutation could affect another's view of the same event.</div>
     <div class="star-row"><span class="star-label">Action:</span> I modeled notification payloads as immutable objects, no setters, all fields final, so any handler that received one could not accidentally corrupt it for a concurrently running handler.</div>
     <div class="star-row"><span class="star-label">Result:</span> Immutability removed an entire category of thread-safety bugs by construction, rather than relying on every handler to behave defensively.</div>
