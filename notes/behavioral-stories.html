@@ -74,7 +74,7 @@
   <ul>
     <li><b>Redis distributed lock:</b> acquire a lock on the cache key before the select and insert, release it after.</li>
     <li><b>Catch and read in a new transaction:</b> let the insert fail, catch the <code>DataIntegrityViolationException</code>, and read the existing row inside <code>@Transactional(propagation = REQUIRES_NEW)</code>, because the failed insert marks the original transaction rollback-only.</li>
-    <li><b>Insert with conflict handling:</b> the cache key already had a unique constraint, so use <code>INSERT ... ON CONFLICT DO NOTHING</code>. If another thread already saved that key, the database skips the insert instead of throwing, and I read the row that is already there.</li>
+    <li><b>Insert with conflict handling:</b> the cache key already had a unique constraint, so use a SQL Server <code>MERGE ... WITH (HOLDLOCK)</code> that only inserts <code>WHEN NOT MATCHED</code>. If another thread already saved that key, the database skips the insert instead of throwing, and I read the row that is already there.</li>
   </ul>
   <p>I went with the third one.</p>
   <p>That 1 to 2 percent failure rate went to effectively zero, with no measurable latency on the normal path and no locking infrastructure to run.</p>
