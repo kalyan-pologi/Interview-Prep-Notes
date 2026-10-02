@@ -1,7 +1,7 @@
 <div class="section-header">
   <div class="tag">Behavioral</div>
   <h1>🗣️ Stories</h1>
-  <p>17 curated stories across 4 features. Frame each one to match whatever the question asks (leadership, debugging, learning, conflict, etc).</p>
+  <p>16 curated stories across 4 features. Frame each one to match whatever the question asks (leadership, debugging, learning, conflict, etc).</p>
 </div>
 
 <div class="note-body">
@@ -58,14 +58,6 @@
   <p>Diffing sounds more precise, but comps have no stable natural key across refreshes. KNN can return a completely different 6 depending on what data changed, so the set can shrink, grow or reorder between runs. So the code has to figure out on its own which old comp matches which new comp. There's nothing reliable to match them on, so it ends up guessing, and that's exactly where it breaks. Two unrelated comps could share an address after a resale, get matched incorrectly, and silently produce a wrong adjustment on a report a customer paid credits for.</p>
   <p>So I went with delete and reinsert. It's 6 comps per appraisal, so a full replace is single digit milliseconds. That's nothing against the ongoing cost of maintaining matching logic that can produce wrong numbers. I leaned on the foreign key's cascade delete from the parent appraisal so the whole replace ran inside one transaction, with no chance of orphaned comp rows if something failed partway.</p>
   <p>Nobody has had to touch that logic since. The honest tradeoff is this only holds while the comp count stays at 6. If we moved to selecting hundreds, the math flips and diffing becomes worth the complexity.</p>
-</div>
-
-<div class="story-block">
-  <h3>Explaining to non-technical people why a free lookup must never charge anyone</h3>
-  <p>Product wanted the free browsing experience to feel fast and smooth, and someone suggested we simplify things by letting the free path and the paid path share more code. The pitch was it would save a week or two of engineering time. I needed to explain to people who don't write code why I didn't want to do that, and make it clear this wasn't just me being picky about architecture.</p>
-  <p>Talking about module boundaries and shared write paths wasn't going to mean anything to them, so I framed it around outcomes instead. We had around 5,000 properties that were free to report on. Everything else cost 10 credits for residential or 30 for commercial. If those two share a write path and a bug slips through at even a 0.1 percent rate, it breaks both ways. Someone viewing a free property gets credits burned for nothing. Or a report someone paid credits for gets silently overwritten by a free cache lookup. Either way that's a refund, a support contact, and a customer who now doubts every number we show them.</p>
-  <p>Then I put it as a simple comparison. One or two weeks of work now, or we permanently remove the chance of taking someone's credits by mistake. Not reduce the chance, remove it.</p>
-  <p>They agreed to keep them separate. What made it land was talking about money and trust instead of code. Said as architecture, it sounds like a preference. Said as refunds, it's a business decision.</p>
 </div>
 
 <h2>Mashvisor API / Caching Layer</h2>
