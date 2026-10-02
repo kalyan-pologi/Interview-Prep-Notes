@@ -70,8 +70,13 @@
   <h3>7. Two parallel cache misses racing to insert the same row</h3>
   <p>I was building a caching layer over Mashvisor, the third party API behind our rentability tab. Opening that tab fires about 20 parallel API calls. Under load testing I started seeing roughly 1 to 2 percent of requests fail outright with <code>DataIntegrityViolationException</code>.</p>
   <p>Each call was a read-through cache: <code>SELECT</code> by cache key, and on a miss, call Mashvisor and <code>INSERT</code> the result. The problem is the gap between that select and that insert. Nearby properties share neighborhood data, so two parallel calls would ask for the same neighborhood within milliseconds. Both ran their select before either one inserted, so both saw a miss. Both called the API. The first insert committed, the second hit the unique constraint on the cache key and threw. That exception propagated up and failed the whole tab response, not just one metric.</p>
-  <p>My first thought was a Redis distributed lock, but that's two network round trips on every cache write to guard against a rare collision, on a request already making 20 outbound calls.</p>
-  <p>So I let the database handle it instead. The cache key already had a unique constraint on it, so I changed the insert to <code>INSERT ... ON CONFLICT DO NOTHING</code>. If another thread has already saved that key, the database just skips the insert instead of throwing, and I read the row that is already there. Same protection the lock gives you, but it happens as part of the insert, so it costs nothing extra.</p>
+  <p>I looked at three ways to handle it:</p>
+  <ul>
+    <li><b>Redis distributed lock:</b> acquire a lock on the cache key before the select and insert, release it after.</li>
+    <li><b>Catch and read in a new transaction:</b> let the insert fail, catch the <code>DataIntegrityViolationException</code>, and read the existing row inside <code>@Transactional(propagation = REQUIRES_NEW)</code>, because the failed insert marks the original transaction rollback-only.</li>
+    <li><b>Insert with conflict handling:</b> the cache key already had a unique constraint, so use <code>INSERT ... ON CONFLICT DO NOTHING</code>. If another thread already saved that key, the database skips the insert instead of throwing, and I read the row that is already there.</li>
+  </ul>
+  <p>I went with the third one.</p>
   <p>That 1 to 2 percent failure rate went to effectively zero, with no measurable latency on the normal path and no locking infrastructure to run.</p>
 </div>
 
