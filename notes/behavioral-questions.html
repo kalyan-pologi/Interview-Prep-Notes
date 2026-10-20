@@ -1,7 +1,7 @@
 <div class="section-header">
   <div class="tag">Behavioral</div>
   <h1>❓ Questions</h1>
-  <p>19 additional interview questions and answers.</p>
+  <p>20 additional interview questions and answers.</p>
 </div>
 
 <div class="note-body">
@@ -69,5 +69,18 @@
 
 <h2>19. How do you rollback a production release?</h2>
 <p>I try to make rollback straightforward by treating every release as a versioned artifact rather than rebuilding old code when something goes wrong. If a new production release introduces a serious issue, we first confirm that rolling back is safe, especially if the release includes database schema changes. Then we redeploy the previously validated application or container version through the deployment pipeline. After rollback, I verify the health endpoints, logs, API error rates, response times, and the business flow that was affected to make sure the system is stable again. Database changes require more care because application rollback is easy only when schema changes are backward compatible. That's why I prefer additive database changes where possible instead of immediately removing or renaming columns. Once production is stable, we investigate the failed release separately, reproduce the problem, implement the fix, test it properly, and then schedule another deployment rather than rushing the same change back into production.</p>
+
+<h2>20. What is SDLC, and what are its main phases?</h2>
+<p><strong>SDLC (Software Development Life Cycle)</strong> is a structured process for building and maintaining quality software that meets user needs within the planned time and budget.</p>
+<ol>
+  <li><strong>Planning:</strong> Define the project's goals, scope, budget, timeline, and required resources. Evaluate feasibility and identify potential risks before starting.</li>
+  <li><strong>Requirements analysis:</strong> Work with stakeholders to understand what the software should do. Document functional requirements, such as login and payments, and nonfunctional requirements, such as performance and security.</li>
+  <li><strong>Design:</strong> Decide how the software will be built, including its architecture, database, APIs, and user interface. Choose suitable technologies and plan how components will interact.</li>
+  <li><strong>Development:</strong> Write code based on the requirements and design. Developers use version control, conduct code reviews, and perform unit testing to check individual components.</li>
+  <li><strong>Testing:</strong> Verify that the software meets requirements and works correctly. Perform integration, system, performance, security, and user acceptance testing as appropriate; report defects, fix them, and retest.</li>
+  <li><strong>Deployment:</strong> Release the software to production so users can access it. Configure the environment, apply necessary database changes, verify critical features, and prepare a rollback plan.</li>
+  <li><strong>Maintenance:</strong> Monitor the application after release, resolve issues, and apply security updates. Improve performance and add or modify features based on user feedback and business needs.</li>
+</ol>
+<p>In <strong>Agile</strong>, these activities repeat in short iterations, allowing teams to incorporate feedback and deliver improvements regularly.</p>
 
 </div>

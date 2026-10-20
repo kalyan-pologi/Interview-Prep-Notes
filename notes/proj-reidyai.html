@@ -38,6 +38,45 @@
 
   <hr>
 
+  <h2>Real Estate Transaction Workflow</h2>
+  <ol>
+    <li><strong>Property Listing:</strong> Seller lists the property for sale.</li>
+    <li><strong>Offer &amp; Contract:</strong> Buyer makes an offer; seller accepts and both sign the agreement.</li>
+    <li><strong>Escrow Opened:</strong> A neutral third party holds funds and documents until closing conditions are met.</li>
+    <li><strong>Inspection &amp; Appraisal:</strong> Inspection checks property condition; appraisal estimates property value.</li>
+    <li><strong>Loan Underwriting:</strong> Lender verifies the buyer's finances, credit, and property details.</li>
+    <li><strong>Clear to Close (CTC):</strong> Lender confirms loan requirements are satisfied.</li>
+    <li><strong>Closing:</strong> Buyer signs final documents, funds are transferred, and ownership changes.</li>
+  </ol>
+
+  <h2>Main Real Estate Terms</h2>
+  <p>These 21 terms cover domain knowledge relevant to Reidy.AI, especially appraisal, property valuation, and rental analytics.</p>
+  <ol>
+    <li><strong>Property Listing:</strong> Property advertised for sale or rent.</li>
+    <li><strong>MLS (Multiple Listing Service):</strong> Database of property listings shared by real estate professionals.</li>
+    <li><strong>Escrow:</strong> Third party holds money or documents until transaction conditions are met.</li>
+    <li><strong>Appraisal:</strong> Process of estimating a property's value.</li>
+    <li><strong>Appraised Value:</strong> Value determined through an appraisal.</li>
+    <li><strong>Market Value:</strong> Estimated price a property would sell for under normal market conditions.</li>
+    <li><strong>AVM (Automated Valuation Model):</strong> Software that estimates property values using data and algorithms.</li>
+    <li><strong>Comparable Properties (Comps):</strong> Similar properties used to estimate a property's value.</li>
+    <li><strong>Subject Property:</strong> Property currently being evaluated.</li>
+    <li><strong>Price per Square Foot:</strong> Property price &divide; property area in square feet.</li>
+    <li><strong>LTV (Loan-to-Value):</strong> Loan amount &divide; property value &times; 100.</li>
+    <li><strong>ARV (After Repair Value):</strong> Estimated property value after renovations.</li>
+    <li><strong>DTI (Debt-to-Income Ratio):</strong> Monthly debt payments &divide; gross monthly income &times; 100.</li>
+    <li><strong>Cash-on-Cash Return:</strong> Annual pre-tax cash flow &divide; total cash invested &times; 100.</li>
+    <li><strong>Cap Rate (Capitalization Rate):</strong> Net operating income &divide; property value &times; 100.</li>
+    <li><strong>Cash Flow:</strong> Rental income minus operating expenses and debt payments.</li>
+    <li><strong>Occupancy Rate:</strong> Percentage of available rental units or space occupied.</li>
+    <li><strong>NOI (Net Operating Income):</strong> Property operating income minus operating expenses, excluding financing costs.</li>
+    <li><strong>Rentability:</strong> A property's potential to attract tenants and generate rental income.</li>
+    <li><strong>STR (Short-Term Rental):</strong> Property rented for short stays, such as vacation rentals.</li>
+    <li><strong>LTR (Long-Term Rental):</strong> Property rented for longer periods, typically under monthly or annual leases.</li>
+  </ol>
+
+  <hr>
+
   <h2>Appraisal</h2>
   <p>This is the part of the platform that generates property valuation reports. We support residential, commercial, land, multiplex, duplex and triplex property types. Report generation uses a KNN model to select the 6 most comparable properties to the subject, then runs weighted and adjusted calculations across those comps to arrive at a value, with agents and an LLM handling the report write up itself. A residential report comes out around 5 pages and 1 to 5MB, a commercial one is closer to 50 pages and 10 to 30MB, and both get stored in a blob container.</p>
   <p>Billing runs on credits, 50 credits for $20, with a residential report costing 10 credits and a commercial one 30. The exception is the roughly 5,000 properties already sitting in our database with cached valuations, which are free to report on. So there are two save paths: credit charged reports go into a permanent history table that's tied to billing and has to stay auditable forever, and free cached properties go into a separate reusable cache.</p>
